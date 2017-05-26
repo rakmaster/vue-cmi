@@ -12,10 +12,16 @@ export default _source = {
    * @returns {ol.Feature}
    * @private
    */
-  _feature: (data) => {
-    return new openlayers.Feature({
-      geometry: data
-    })
+  _feature: (data, style, state) => {
+    var source = {}
+    source.geometry = data
+    if (style) {
+      source.style = style
+    }
+    if (state) {
+      source.state = state
+    }
+    return new openlayers.Feature(source)
   },
   /**
    * _attributions
@@ -53,18 +59,27 @@ export default _source = {
    * @private
    */
   _point: (data) => {
-    let coords
+    let coords, styl, feature, state
     if (Array.isArray(data)) {
       coords = data
     } else {
       coords = data.coordinates
+      if(data.state) {
+        state = data.state
+      }
     }
-    let feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)))
-    let style = null
-    if (data.style) {
-      style = data.style
-      style.type = 'Point'
-      feature.setStyle(_style(data.style))
+    if (typeof data.style !== 'undefined') {
+      if (data.style.method) {
+        let styleFunc = data.style.method
+        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styleFunc, 'inactive')
+      } else {
+        styl = data.style
+        styl.type = 'Point'
+        styl = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(styl)
+        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styl, state)
+      }
+    } else {
+      feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), null, state)
     }
     return feature
   },

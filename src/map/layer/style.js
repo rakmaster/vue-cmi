@@ -43,69 +43,80 @@ let _arrange = (data) => {
   return out
 }
 
-export default (data) => {
-  let source = {}
+let _style = (data) => {
+  let out
   let stl = _arrange(data)
-
-  switch(data.type) {
-    case 'Point':
-      if (stl.image) {
-        source.image = stl.image
+  let source = {}
+  let methods = {
+    Point: (styl) => {
+      if (styl.image) {
+        source.image = styl.image
       }
-      if (stl.text) {
-        source.text = _text(stl.text, stl.fill)
+      if (styl.text) {
+        source.text = _text(styl.text, styl.fill)
       }
-      break;
-    case 'LineString':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    LineString: (styl) => {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      break;
-    case 'MultiLineString':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    MultiLineString: (styl) => {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      break;
-    case 'MultiPoint':
-      if (stl.image) {
-        source.image = stl.image
+      return new openlayers.style.Style(source)
+    },
+    MultiPoint: (styl) => {
+      if (styl.image) {
+        source.image = styl.image
       }
-      if (stl.font) {
-        source.text = _text(stl.text, stl.fill)
+      if (styl.font) {
+        source.text = _text(styl.text, styl.fill)
       }
-      break;
-    case 'MultiPolygon':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    MultiPolygon: (styl) => {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
-    case 'Polygon':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    Polygon: (styl) => {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
-    case 'GeometryCollection':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    GeometryCollection: (styl) => {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
-    case 'Circle':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    Circle: (styl) => {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
+      return new openlayers.style.Style(source)
+    }
   }
-  return new openlayers.style.Style(source)
+  out = methods[data.type](stl)
+  return out
 }
+
+export default _style

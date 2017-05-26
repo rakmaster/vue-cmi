@@ -12,25 +12,6 @@ const openlayers = require('../../../node_modules/openlayers/dist/ol-debug.js')
 let _layer = {}
 export default _layer = {
   /**
-   * _setStyle
-   * Create the proper style injection
-   *
-   * @param data Object
-   * @returns ol.style.Style
-   */
-  _setStyle (data) {
-    let out = null
-    if(Array.isArray(data)) {
-      out = []
-      for (let s in data) {
-        out.push(_style(data[s]))
-      }
-    } else {
-      out = _style(data)
-    }
-    return out
-  },
-  /**
    * draw
    * Master controller for drawing a layer
    *
@@ -100,11 +81,20 @@ export default _layer = {
   points (name, source) {
     // source should be an object of coordinates (array or object), style (optional)
     let out = {}
-    let style = null
     out.name = name
-    out.source = _source.points(source)
+    if (source.style.method) {
+      source.state = 'inactive'
+    }
+    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].points(source)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      if (source.style.method) {
+        let style = source.style.method
+        out.style = style
+      } else {
+        out.style = _style(source.style)
+      }
+    } else {
+      out.style = _style({type: 'Point'})
     }
     return new openlayers.layer.Vector(out)
   },
@@ -125,7 +115,7 @@ export default _layer = {
     out.name = name
     out.source = _source.shape(source)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      out.style = _style(source.style)
     } else {
       out.style = _style({type: 'Polygon'})
     }
@@ -148,7 +138,7 @@ export default _layer = {
     out.name = name
     out.source = _source.radius(source)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      out.style = _style(source.style)
     } else {
       out.style = _style({type: 'Polygon'})
     }
@@ -168,7 +158,7 @@ export default _layer = {
     out.name = name
     out.source = _source.geojson(source.coordinates)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      out.style = _style(source.style)
     } else {
       out.style = _style({type: 'MultiPolygon'})
     }

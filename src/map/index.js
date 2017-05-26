@@ -100,22 +100,27 @@ map.prototype.getLayers = (exclude) => {
   }
   return out
 }
+
 map.prototype.getLayer = (name) => {
-  let out
-  this.getLayers().forEach((lyr) => {
+  let out = []
+  let all = this.getLayers()
+  all.forEach((lyr) => {
     if (name === lyr.get('name')) {
       out = lyr
     }
   })
   return out
 }
+
 map.prototype.getFeatures = function (layer) {
-  var extent = this$1.ol.getView().calculateExtent(this$1.ol.getSize())
+  var extent = this.ol.getView().calculateExtent(this.ol.getSize())
   return this.getLayer(layer).getSource().getFeaturesInExtent(extent)
 }
+
 map.prototype.getFeature = function (layer, reference) {
   return this.getLayer(layer).getSource().getClosestFeatureToCoordinate(reference)
 }
+
 map.prototype.layer = (data) => {
   // Inject the global styles...
   data.defaultStyle = this.defaults.styles.pointStyle
@@ -124,6 +129,7 @@ map.prototype.layer = (data) => {
   this.ol.addLayer(out)
   return out
 }
+
 map.prototype.animate = (data, interval) => {
   var set = []
   data.getLayers().forEach((layer) => {
@@ -142,6 +148,7 @@ map.prototype.animate = (data, interval) => {
     set[iterant].setVisible(!set[iterant].getVisible())
   }, interval)
 }
+
 map.prototype.panto = (data) => {
   if(data.extents) {
     let extent = _extents(data.extents)

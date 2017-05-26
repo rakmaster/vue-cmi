@@ -365,7 +365,7 @@ var _layer = {
     out.name = name;
     out.source = _source.points(source);
     if (source.style) {
-      out.style = _setStyle(source.style);
+      out.style = _layer._setStyle(source.style);
     }
     return new openlayers.layer.Vector(out);
   },
@@ -386,7 +386,7 @@ var _layer = {
     out.name = name;
     out.source = _source.shape(source);
     if (source.style) {
-      out.style = _setStyle(source.style);
+      out.style = _layer._setStyle(source.style);
     } else {
       out.style = _style({type: 'Polygon'});
     }
@@ -409,7 +409,7 @@ var _layer = {
     out.name = name;
     out.source = _source.radius(source);
     if (source.style) {
-      out.style = _setStyle(source.style);
+      out.style = _layer._setStyle(source.style);
     } else {
       out.style = _style({type: 'Polygon'});
     }
@@ -429,7 +429,7 @@ var _layer = {
     out.name = name;
     out.source = _source.geojson(source.coordinates);
     if (source.style) {
-      out.style = _setStyle(source.style);
+      out.style = _layer._setStyle(source.style);
     } else {
       out.style = _style({type: 'MultiPolygon'});
     }

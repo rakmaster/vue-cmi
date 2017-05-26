@@ -92196,72 +92196,83 @@ var _arrange = function (data) {
   return out
 }
 
-/* harmony default export */ __webpack_exports__["a"] = (function (data) {
-  var source = {}
+var _style = function (data) {
+  var out
   var stl = _arrange(data)
-
-  switch(data.type) {
-    case 'Point':
-      if (stl.image) {
-        source.image = stl.image
+  var source = {}
+  var methods = {
+    Point: function (styl) {
+      if (styl.image) {
+        source.image = styl.image
       }
-      if (stl.text) {
-        source.text = _text(stl.text, stl.fill)
+      if (styl.text) {
+        source.text = _text(styl.text, styl.fill)
       }
-      break;
-    case 'LineString':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    LineString: function (styl) {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      break;
-    case 'MultiLineString':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    MultiLineString: function (styl) {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      break;
-    case 'MultiPoint':
-      if (stl.image) {
-        source.image = stl.image
+      return new openlayers.style.Style(source)
+    },
+    MultiPoint: function (styl) {
+      if (styl.image) {
+        source.image = styl.image
       }
-      if (stl.font) {
-        source.text = _text(stl.text, stl.fill)
+      if (styl.font) {
+        source.text = _text(styl.text, styl.fill)
       }
-      break;
-    case 'MultiPolygon':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    MultiPolygon: function (styl) {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
-    case 'Polygon':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    Polygon: function (styl) {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
-    case 'GeometryCollection':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    GeometryCollection: function (styl) {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
-    case 'Circle':
-      if (stl.stroke) {
-        source.stroke = _stroke(stl.stroke)
+      return new openlayers.style.Style(source)
+    },
+    Circle: function (styl) {
+      if (styl.stroke) {
+        source.stroke = _stroke(styl.stroke)
       }
-      if (stl.fill) {
-        source.fill = _fill(stl.fill)
+      if (styl.fill) {
+        source.fill = _fill(styl.fill)
       }
-      break;
+      return new openlayers.style.Style(source)
+    }
   }
-  return new openlayers.style.Style(source)
-});
+  out = methods[data.type](stl)
+  return out
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (_style);
 
 
 /***/ }),
@@ -92388,22 +92399,27 @@ map.prototype.getLayers = function (exclude) {
   }
   return out
 }
+
 map.prototype.getLayer = function (name) {
-  var out
-  this$1.getLayers().forEach(function (lyr) {
+  var out = []
+  var all = this$1.getLayers()
+  all.forEach(function (lyr) {
     if (name === lyr.get('name')) {
       out = lyr
     }
   })
   return out
 }
+
 map.prototype.getFeatures = function (layer) {
-  var extent = this$1.ol.getView().calculateExtent(this$1.ol.getSize())
+  var extent = this.ol.getView().calculateExtent(this.ol.getSize())
   return this.getLayer(layer).getSource().getFeaturesInExtent(extent)
 }
+
 map.prototype.getFeature = function (layer, reference) {
   return this.getLayer(layer).getSource().getClosestFeatureToCoordinate(reference)
 }
+
 map.prototype.layer = function (data) {
   // Inject the global styles...
   data.defaultStyle = this$1.defaults.styles.pointStyle
@@ -92412,6 +92428,7 @@ map.prototype.layer = function (data) {
   this$1.ol.addLayer(out)
   return out
 }
+
 map.prototype.animate = function (data, interval) {
   var set = []
   data.getLayers().forEach(function (layer) {
@@ -92430,6 +92447,7 @@ map.prototype.animate = function (data, interval) {
     set[iterant].setVisible(!set[iterant].getVisible())
   }, interval)
 }
+
 map.prototype.panto = function (data) {
   if(data.extents) {
     var extent = _extents(data.extents)
@@ -92591,25 +92609,6 @@ var openlayers = __webpack_require__(0)
 var _layer = {}
 /* harmony default export */ __webpack_exports__["a"] = (_layer = {
   /**
-   * _setStyle
-   * Create the proper style injection
-   *
-   * @param data Object
-   * @returns ol.style.Style
-   */
-  _setStyle: function _setStyle (data) {
-    var out = null
-    if(Array.isArray(data)) {
-      out = []
-      for (var s in data) {
-        out.push(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(data[s]))
-      }
-    } else {
-      out = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(data)
-    }
-    return out
-  },
-  /**
    * draw
    * Master controller for drawing a layer
    *
@@ -92679,11 +92678,20 @@ var _layer = {}
   points: function points (name, source) {
     // source should be an object of coordinates (array or object), style (optional)
     var out = {}
-    var style = null
     out.name = name
+    if (source.style.method) {
+      source.state = 'inactive'
+    }
     out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].points(source)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      if (source.style.method) {
+        var style = source.style.method
+        out.style = style
+      } else {
+        out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
+      }
+    } else {
+      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Point'})
     }
     return new openlayers.layer.Vector(out)
   },
@@ -92704,7 +92712,7 @@ var _layer = {}
     out.name = name
     out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].shape(source)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
     } else {
       out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'})
     }
@@ -92727,7 +92735,7 @@ var _layer = {}
     out.name = name
     out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].radius(source)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
     } else {
       out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'})
     }
@@ -92747,7 +92755,7 @@ var _layer = {}
     out.name = name
     out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].geojson(source.coordinates)
     if (source.style) {
-      out.style = _setStyle(source.style)
+      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
     } else {
       out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'MultiPolygon'})
     }
@@ -92806,10 +92814,16 @@ var _source = {}
    * @returns {ol.Feature}
    * @private
    */
-  _feature: function (data) {
-    return new openlayers.Feature({
-      geometry: data
-    })
+  _feature: function (data, style, state) {
+    var source = {}
+    source.geometry = data
+    if (style) {
+      source.style = style
+    }
+    if (state) {
+      source.state = state
+    }
+    return new openlayers.Feature(source)
   },
   /**
    * _attributions
@@ -92847,18 +92861,27 @@ var _source = {}
    * @private
    */
   _point: function (data) {
-    var coords
+    var coords, styl, feature, state
     if (Array.isArray(data)) {
       coords = data
     } else {
       coords = data.coordinates
+      if(data.state) {
+        state = data.state
+      }
     }
-    var feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)))
-    var style = null
-    if (data.style) {
-      style = data.style
-      style.type = 'Point'
-      feature.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(data.style))
+    if (typeof data.style !== 'undefined') {
+      if (data.style.method) {
+        var styleFunc = data.style.method
+        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styleFunc, 'inactive')
+      } else {
+        styl = data.style
+        styl.type = 'Point'
+        styl = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(styl)
+        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styl, state)
+      }
+    } else {
+      feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), null, state)
     }
     return feature
   },
