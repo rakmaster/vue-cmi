@@ -103,7 +103,8 @@ map.prototype.getLayers = (exclude) => {
 
 map.prototype.getLayer = (name) => {
   let out = []
-  let all = this.getLayers()
+  let _this = this
+  let all = _this.getLayers()
   all.forEach((lyr) => {
     if (name === lyr.get('name')) {
       out = lyr
@@ -113,8 +114,7 @@ map.prototype.getLayer = (name) => {
 }
 
 map.prototype.getFeatures = function (layer) {
-  var extent = this.ol.getView().calculateExtent(this.ol.getSize())
-  return this.getLayer(layer).getSource().getFeaturesInExtent(extent)
+  return this.getLayer(layer).getSource().getFeatures(extent)
 }
 
 map.prototype.getFeature = function (layer, reference) {

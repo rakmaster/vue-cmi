@@ -5,14 +5,14 @@ const openlayers = require('../../../node_modules/openlayers/dist/ol-debug.js')
 let _source = {}
 export default _source = {
   /**
-   * _feature
+   * __feature
    * Utility method for creating a source feature
    *
    * @param data ol.geom.*
    * @returns {ol.Feature}
    * @private
    */
-  _feature: (data, style, state) => {
+  __feature: (data, style, state) => {
     var source = {}
     source.geometry = data
     if (style) {
@@ -24,7 +24,7 @@ export default _source = {
     return new openlayers.Feature(source)
   },
   /**
-   * _attributions
+   * __attributions
    * Utility method for creating source attributions. Can
    * be either a single string, or an array of strings
    *
@@ -32,7 +32,7 @@ export default _source = {
    * @returns {Array(ol.Attribution)}
    * @private
    */
-  _attributions: (data) => {
+  __attributions: (data) => {
     let attributions = []
     if (data) {
       if (Array.isArray(data)) {
@@ -47,6 +47,17 @@ export default _source = {
       }
     }
     return attributions
+  },
+  /**
+   * __normalize
+   * Utility method for standardizing all point projections
+   *
+   * @param coordinates
+   * @returns Array(transformedCoordinates)
+   * @private
+   */
+  __normalize: (coordinates) => {
+    return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857')
   },
   /**
    * _point
@@ -71,28 +82,104 @@ export default _source = {
     if (typeof data.style !== 'undefined') {
       if (data.style.method) {
         let styleFunc = data.style.method
-        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styleFunc, 'inactive')
+        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styleFunc, 'inactive')
       } else {
         styl = data.style
         styl.type = 'Point'
-        styl = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(styl)
-        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styl, state)
+        styl = _style(styl)
+        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
       }
     } else {
-      feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), null, state)
+      feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), null, state)
     }
     return feature
   },
   /**
-   * _normalize
-   * Utility method for standardizing all point projections
+   * _shape
+   * Create a single Polygon feature
    *
-   * @param coordinates
-   * @returns Array(transformedCoordinates)
-   * @private
+   * @param data Object
+   * @returns {ol.Feature}
    */
-  _normalize: (coordinates) => {
-    return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857')
+  _shape: (data) => {
+    let vertices = []
+    for (let d = 0; d < data.coordinates.length; d++) {
+      vertices.push(_source._normalize(data.coordinates[d]))
+    }
+    return _source._feature(new openlayers.geom.Polygon([vertices]))
+  },
+  /**
+   * _xyz
+   * Create a single tile source
+   *
+   * @param data Object
+   * @returns {}
+   */
+  _xyz: (data) => {
+    let attributions, url
+    if (data.attributions) {
+      attributions = _source.__attributions(data.attributions)
+    }
+    if (data.url) {
+      url = data.url
+    } else { // If there's no tiles url, we don't have a layer
+      return false
+    }
+    return {
+      attributions: attributions,
+      url: url
+    }
+  },
+  /**
+   * _image
+   * Create a single image source
+   *
+   * @param data Object
+   * @returns {}
+   */
+  _image: (data) => {
+    // Create a "fake" layer so we can get the extents
+    // where the image should place itself on our map
+    let fake = _source.shape(data.coordinates)
+    let extent = fake.getExtent()
+    let attributions, url
+    if (data.attributions) {
+      attributions = _source.__attributions(data.attributions)
+    }
+    if (data.url) {
+      url = data.url
+    } else { // If there's no image url, we don't have a layer
+      return false
+    }
+    return {
+      attributions: attributions,
+      url: url,
+      imageExtent: extent
+    }
+  },
+  /**
+   * _radius
+   * Create one circle feature
+   *
+   * @param data Object
+   * @returns {ol.Feature}
+   */
+  _radius: (data) => {
+    let radiusMiles = data.radius
+    let arrConversion = []
+    arrConversion['degrees'] = (1 / (60 * 1.1508))
+    arrConversion['dd'] = arrConversion['degrees']
+    arrConversion['m'] = (1609.344)
+    arrConversion['ft'] = (5280)
+    arrConversion['km'] = (1.609344)
+    arrConversion['mi'] = (1)
+    arrConversion['inches'] = (63360)
+    // need to multiply by sqrt(2)/2 or 1.41421356/2  because
+    // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
+    // adjust by root 2 so we get the actual sides in length that we want
+    let r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
+    let c = _source._normalize(data.coordinates)
+    return _source._feature(new openlayers.geom.Circle(c, r))
   },
   /**
    * default
@@ -111,19 +198,7 @@ export default _source = {
    * @returns {ol.source.XYZ}
    */
   xyz: (data) => {
-    let attributions, url
-    if (data.attributions) {
-      attributions = _source._attributions(data.attributions)
-    }
-    if (data.url) {
-      url = data.url
-    } else { // If there's no tiles url, we don't have a layer
-      return false
-    }
-    return new openlayers.source.XYZ({
-      attributions: attributions,
-      url: url
-    })
+    return new openlayers.source.XYZ(_source._xyz(data))
   },
   /**
    * image
@@ -133,40 +208,18 @@ export default _source = {
    * @returns {ol.source.ImageStatic}
    */
   image: (data) => {
-    // Create a "fake" layer so we can get the extents
-    // where the image should place itself on our map
-    let fake = _source.shape(data.coordinates)
-    let extent = fake.getExtent()
-    let attributions, url
-    if (data.attributions) {
-      attributions = _source._attributions(data.attributions)
-    }
-    if (data.url) {
-      url = data.url
-    } else { // If there's no image url, we don't have a layer
-      return false
-    }
-    return new openlayers.source.ImageStatic({
-      attributions: attributions,
-      url: url,
-      imageExtent: extent
-    })
+    return new openlayers.source.ImageStatic(_source._image(data))
   },
   /**
-   * points
-   * Create one vector source with many point features
+   * point
+   * Create one vector source with one point feature
    *
    * @param data Object
    * @returns {ol.source.Vector}
    */
-  points: (data) => {
-    let out = {}
-    let features = []
-    for (var d = 0; d < data.length; d++) {
-      features.push(_source._point(data[d]))
-    }
-    out.features = features
-    return new openlayers.source.Vector(out)
+  point: (data) => {
+    let features = [_source._point(data)]
+    return new openlayers.source.Vector(features)
   },
   /**
    * shape
@@ -176,12 +229,8 @@ export default _source = {
    * @returns {ol.source.Vector}
    */
   shape: (data) => {
-    let vertices = []
-    for (let d = 0; d < data.coordinates.length; d++) {
-      vertices.push(_source._normalize(data.coordinates[d]))
-    }
-    let feature = _source._feature(new openlayers.geom.Polygon([vertices]))
-    return new openlayers.source.Vector({features: [feature]})
+    let features = [_source._shape(data)]
+    return new openlayers.source.Vector(features)
   },
   /**
    * radius
@@ -191,22 +240,25 @@ export default _source = {
    * @return {ol.source.Vector}
    */
   radius: (data) => {
-    let radiusMiles = data.radius
-    let arrConversion = []
-    arrConversion['degrees'] = (1 / (60 * 1.1508))
-    arrConversion['dd'] = arrConversion['degrees']
-    arrConversion['m'] = (1609.344)
-    arrConversion['ft'] = (5280)
-    arrConversion['km'] = (1.609344)
-    arrConversion['mi'] = (1)
-    arrConversion['inches'] = (63360)
-    // need to multiply by sqrt(2)/2 or 1.41421356/2  because
-    // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
-    // adjust by root 2 so we get the actual sides in length that we want
-    let r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
-    let c = new openlayers.Coordinate(_source._normalize(data.coordinates))
-    let feature = _source._feature(new openlayers.geom.Circle(c, r))
-    return new openlayers.source.Vector({features: feature})
+    let features = [_source._radius(data)]
+    return new openlayers.source.Vector(features)
+  },
+  /**
+   * multi
+   * Create a vector source with many features
+   *
+   * @param data Object
+   * @return {ol.source.Vector}
+   */
+  multi: (data) => {
+    let out = {}
+    let features = []
+    for (var d = 0; d < data.length; d++) {
+      let met = _source['_' + data[d].type]
+      features.push(met(data[d]))
+    }
+    out.features = features
+    return new openlayers.source.Vector(out)
   },
   /**
    * geojson

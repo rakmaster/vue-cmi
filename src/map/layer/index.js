@@ -69,36 +69,6 @@ export default _layer = {
     return new openlayers.layer.Image(out)
   },
   /**
-   * points
-   * Draw a layer of the type Vector with one or more Point features
-   * Note: each point may have a different style. If a point does not contain
-   * its own style designation, the global default will be used instead
-   *
-   * @param name String
-   * @param source Object
-   * @returns {ol.layer.Vector}
-   */
-  points (name, source) {
-    // source should be an object of coordinates (array or object), style (optional)
-    let out = {}
-    out.name = name
-    if (source.style.method) {
-      source.state = 'inactive'
-    }
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].points(source)
-    if (source.style) {
-      if (source.style.method) {
-        let style = source.style.method
-        out.style = style
-      } else {
-        out.style = _style(source.style)
-      }
-    } else {
-      out.style = _style({type: 'Point'})
-    }
-    return new openlayers.layer.Vector(out)
-  },
-  /**
    * shape
    * Draw a layer of the type Vector with one Shape feature
    * Note: the shape layer may have a custom style assignment. If the shape data
@@ -163,6 +133,29 @@ export default _layer = {
       out.style = _style({type: 'MultiPolygon'})
     }
     return new ol.layer.Vector(out)
+  },
+  /**
+   * multi
+   * Draw multiple features in one layer from an array of feature data objects
+   *
+   * @param data
+   * @returns {ol.layer.Vector}
+   */
+  multi (name, source) {
+    let out = {}
+    let style = null
+    out.name = name
+    out.source = _source.multi(source)
+    if (source.style) {
+      if(source.style.method) {
+        out.style = source.style.method
+      } else {
+        out.style = _style(source.style)
+      }
+    } else {
+      out.style = _style({type: 'Polygon'})
+    }
+    return new openlayers.layer.Vector(out)
   },
   /**
    * group

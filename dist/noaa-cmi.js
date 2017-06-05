@@ -92402,7 +92402,8 @@ map.prototype.getLayers = function (exclude) {
 
 map.prototype.getLayer = function (name) {
   var out = []
-  var all = this$1.getLayers()
+  var _this = this$1
+  var all = _this.getLayers()
   all.forEach(function (lyr) {
     if (name === lyr.get('name')) {
       out = lyr
@@ -92412,8 +92413,7 @@ map.prototype.getLayer = function (name) {
 }
 
 map.prototype.getFeatures = function (layer) {
-  var extent = this.ol.getView().calculateExtent(this.ol.getSize())
-  return this.getLayer(layer).getSource().getFeaturesInExtent(extent)
+  return this.getLayer(layer).getSource().getFeatures(extent)
 }
 
 map.prototype.getFeature = function (layer, reference) {
@@ -92666,36 +92666,6 @@ var _layer = {}
     return new openlayers.layer.Image(out)
   },
   /**
-   * points
-   * Draw a layer of the type Vector with one or more Point features
-   * Note: each point may have a different style. If a point does not contain
-   * its own style designation, the global default will be used instead
-   *
-   * @param name String
-   * @param source Object
-   * @returns {ol.layer.Vector}
-   */
-  points: function points (name, source) {
-    // source should be an object of coordinates (array or object), style (optional)
-    var out = {}
-    out.name = name
-    if (source.style.method) {
-      source.state = 'inactive'
-    }
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].points(source)
-    if (source.style) {
-      if (source.style.method) {
-        var style = source.style.method
-        out.style = style
-      } else {
-        out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
-      }
-    } else {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Point'})
-    }
-    return new openlayers.layer.Vector(out)
-  },
-  /**
    * shape
    * Draw a layer of the type Vector with one Shape feature
    * Note: the shape layer may have a custom style assignment. If the shape data
@@ -92762,6 +92732,29 @@ var _layer = {}
     return new ol.layer.Vector(out)
   },
   /**
+   * multi
+   * Draw multiple features in one layer from an array of feature data objects
+   *
+   * @param data
+   * @returns {ol.layer.Vector}
+   */
+  multi: function multi (name, source) {
+    var out = {}
+    var style = null
+    out.name = name
+    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].multi(source)
+    if (source.style) {
+      if(source.style.method) {
+        out.style = source.style.method
+      } else {
+        out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
+      }
+    } else {
+      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'})
+    }
+    return new openlayers.layer.Vector(out)
+  },
+  /**
    * group
    * Draw a group of layers based on an array of layer data objects
    *
@@ -92807,14 +92800,14 @@ var openlayers = __webpack_require__(0)
 var _source = {}
 /* harmony default export */ __webpack_exports__["a"] = (_source = {
   /**
-   * _feature
+   * __feature
    * Utility method for creating a source feature
    *
    * @param data ol.geom.*
    * @returns {ol.Feature}
    * @private
    */
-  _feature: function (data, style, state) {
+  __feature: function (data, style, state) {
     var source = {}
     source.geometry = data
     if (style) {
@@ -92826,7 +92819,7 @@ var _source = {}
     return new openlayers.Feature(source)
   },
   /**
-   * _attributions
+   * __attributions
    * Utility method for creating source attributions. Can
    * be either a single string, or an array of strings
    *
@@ -92834,7 +92827,7 @@ var _source = {}
    * @returns {Array(ol.Attribution)}
    * @private
    */
-  _attributions: function (data) {
+  __attributions: function (data) {
     var attributions = []
     if (data) {
       if (Array.isArray(data)) {
@@ -92849,6 +92842,17 @@ var _source = {}
       }
     }
     return attributions
+  },
+  /**
+   * __normalize
+   * Utility method for standardizing all point projections
+   *
+   * @param coordinates
+   * @returns Array(transformedCoordinates)
+   * @private
+   */
+  __normalize: function (coordinates) {
+    return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857')
   },
   /**
    * _point
@@ -92873,28 +92877,104 @@ var _source = {}
     if (typeof data.style !== 'undefined') {
       if (data.style.method) {
         var styleFunc = data.style.method
-        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styleFunc, 'inactive')
+        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styleFunc, 'inactive')
       } else {
         styl = data.style
         styl.type = 'Point'
         styl = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(styl)
-        feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), styl, state)
+        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
       }
     } else {
-      feature = _source._feature(new openlayers.geom.Point(_source._normalize(coords)), null, state)
+      feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), null, state)
     }
     return feature
   },
   /**
-   * _normalize
-   * Utility method for standardizing all point projections
+   * _shape
+   * Create a single Polygon feature
    *
-   * @param coordinates
-   * @returns Array(transformedCoordinates)
-   * @private
+   * @param data Object
+   * @returns {ol.Feature}
    */
-  _normalize: function (coordinates) {
-    return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857')
+  _shape: function (data) {
+    var vertices = []
+    for (var d = 0; d < data.coordinates.length; d++) {
+      vertices.push(_source._normalize(data.coordinates[d]))
+    }
+    return _source._feature(new openlayers.geom.Polygon([vertices]))
+  },
+  /**
+   * _xyz
+   * Create a single tile source
+   *
+   * @param data Object
+   * @returns {}
+   */
+  _xyz: function (data) {
+    var attributions, url
+    if (data.attributions) {
+      attributions = _source.__attributions(data.attributions)
+    }
+    if (data.url) {
+      url = data.url
+    } else { // If there's no tiles url, we don't have a layer
+      return false
+    }
+    return {
+      attributions: attributions,
+      url: url
+    }
+  },
+  /**
+   * _image
+   * Create a single image source
+   *
+   * @param data Object
+   * @returns {}
+   */
+  _image: function (data) {
+    // Create a "fake" layer so we can get the extents
+    // where the image should place itself on our map
+    var fake = _source.shape(data.coordinates)
+    var extent = fake.getExtent()
+    var attributions, url
+    if (data.attributions) {
+      attributions = _source.__attributions(data.attributions)
+    }
+    if (data.url) {
+      url = data.url
+    } else { // If there's no image url, we don't have a layer
+      return false
+    }
+    return {
+      attributions: attributions,
+      url: url,
+      imageExtent: extent
+    }
+  },
+  /**
+   * _radius
+   * Create one circle feature
+   *
+   * @param data Object
+   * @returns {ol.Feature}
+   */
+  _radius: function (data) {
+    var radiusMiles = data.radius
+    var arrConversion = []
+    arrConversion['degrees'] = (1 / (60 * 1.1508))
+    arrConversion['dd'] = arrConversion['degrees']
+    arrConversion['m'] = (1609.344)
+    arrConversion['ft'] = (5280)
+    arrConversion['km'] = (1.609344)
+    arrConversion['mi'] = (1)
+    arrConversion['inches'] = (63360)
+    // need to multiply by sqrt(2)/2 or 1.41421356/2  because
+    // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
+    // adjust by root 2 so we get the actual sides in length that we want
+    var r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
+    var c = _source._normalize(data.coordinates)
+    return _source._feature(new openlayers.geom.Circle(c, r))
   },
   /**
    * default
@@ -92913,19 +92993,7 @@ var _source = {}
    * @returns {ol.source.XYZ}
    */
   xyz: function (data) {
-    var attributions, url
-    if (data.attributions) {
-      attributions = _source._attributions(data.attributions)
-    }
-    if (data.url) {
-      url = data.url
-    } else { // If there's no tiles url, we don't have a layer
-      return false
-    }
-    return new openlayers.source.XYZ({
-      attributions: attributions,
-      url: url
-    })
+    return new openlayers.source.XYZ(_source._xyz(data))
   },
   /**
    * image
@@ -92935,40 +93003,18 @@ var _source = {}
    * @returns {ol.source.ImageStatic}
    */
   image: function (data) {
-    // Create a "fake" layer so we can get the extents
-    // where the image should place itself on our map
-    var fake = _source.shape(data.coordinates)
-    var extent = fake.getExtent()
-    var attributions, url
-    if (data.attributions) {
-      attributions = _source._attributions(data.attributions)
-    }
-    if (data.url) {
-      url = data.url
-    } else { // If there's no image url, we don't have a layer
-      return false
-    }
-    return new openlayers.source.ImageStatic({
-      attributions: attributions,
-      url: url,
-      imageExtent: extent
-    })
+    return new openlayers.source.ImageStatic(_source._image(data))
   },
   /**
-   * points
-   * Create one vector source with many point features
+   * point
+   * Create one vector source with one point feature
    *
    * @param data Object
    * @returns {ol.source.Vector}
    */
-  points: function (data) {
-    var out = {}
-    var features = []
-    for (var d = 0; d < data.length; d++) {
-      features.push(_source._point(data[d]))
-    }
-    out.features = features
-    return new openlayers.source.Vector(out)
+  point: function (data) {
+    var features = [_source._point(data)]
+    return new openlayers.source.Vector(features)
   },
   /**
    * shape
@@ -92978,12 +93024,8 @@ var _source = {}
    * @returns {ol.source.Vector}
    */
   shape: function (data) {
-    var vertices = []
-    for (var d = 0; d < data.coordinates.length; d++) {
-      vertices.push(_source._normalize(data.coordinates[d]))
-    }
-    var feature = _source._feature(new openlayers.geom.Polygon([vertices]))
-    return new openlayers.source.Vector({features: [feature]})
+    var features = [_source._shape(data)]
+    return new openlayers.source.Vector(features)
   },
   /**
    * radius
@@ -92993,22 +93035,25 @@ var _source = {}
    * @return {ol.source.Vector}
    */
   radius: function (data) {
-    var radiusMiles = data.radius
-    var arrConversion = []
-    arrConversion['degrees'] = (1 / (60 * 1.1508))
-    arrConversion['dd'] = arrConversion['degrees']
-    arrConversion['m'] = (1609.344)
-    arrConversion['ft'] = (5280)
-    arrConversion['km'] = (1.609344)
-    arrConversion['mi'] = (1)
-    arrConversion['inches'] = (63360)
-    // need to multiply by sqrt(2)/2 or 1.41421356/2  because
-    // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
-    // adjust by root 2 so we get the actual sides in length that we want
-    var r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
-    var c = new openlayers.Coordinate(_source._normalize(data.coordinates))
-    var feature = _source._feature(new openlayers.geom.Circle(c, r))
-    return new openlayers.source.Vector({features: feature})
+    var features = [_source._radius(data)]
+    return new openlayers.source.Vector(features)
+  },
+  /**
+   * multi
+   * Create a vector source with many features
+   *
+   * @param data Object
+   * @return {ol.source.Vector}
+   */
+  multi: function (data) {
+    var out = {}
+    var features = []
+    for (var d = 0; d < data.length; d++) {
+      var met = _source['_' + data[d].type]
+      features.push(met(data[d]))
+    }
+    out.features = features
+    return new openlayers.source.Vector(out)
   },
   /**
    * geojson
