@@ -15,8 +15,8 @@
     "dev": "TARGET=dev webpack --config build/config.js --progress --hide-modules"
   },
   "dependencies": {
-    "openlayers": "^6.0.0",
-    "vue": "^3.0.0"
+    "openlayers": "^4.1.0",
+    "vue": "^2.3.3"
   },
   "devDependencies": {
     "babel-core": "^6.22.1",
