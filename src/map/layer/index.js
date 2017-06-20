@@ -12,6 +12,16 @@ const openlayers = require('../../../node_modules/openlayers/dist/ol-debug.js')
 let _layer = {}
 export default _layer = {
   /**
+   * _vector
+   * Utility method to do the standard vector layer creation
+   */
+  _vector (name, source) {
+    let layer = new openlayers.layer.Vector()
+    layer.set('name', name)
+    layer.setSource(source)
+    return layer
+  },
+  /**
    * draw
    * Master controller for drawing a layer
    *
@@ -45,10 +55,10 @@ export default _layer = {
    */
   tile (name, source) {
     // source should be an object of attributions, url
-    let out = {}
-    out.name = name
-    out.source = _source.xyz(source)
-    return new openlayers.layer.Tile(out)
+    let layer = new openlayers.layer.Tile()
+    layer.set('name', name)
+    layer.setSource(_source.xyz(source))
+    return layer
   },
   /**
    * image
@@ -63,10 +73,10 @@ export default _layer = {
    */
   image (name, source) {
     // source should be an object of coordinates, attributions, url
-    let out = {}
-    out.name = name
-    out.source = _source.image(source)
-    return new openlayers.layer.Image(out)
+    let layer = new openlayers.layer.Image()
+    layer.set('name', name)
+    layer.setSource(_source.image(source))
+    return layer
   },
   /**
    * shape
@@ -79,17 +89,14 @@ export default _layer = {
    * @returns {ol.layer.Vector|ol.source.Vector|ol.test.rendering.layer.Vector}
    */
   shape (name, source) {
-    // should be an object of coordinates (array), style (optional)
-    let out = {}
-    let style = null
-    out.name = name
-    out.source = _source.shape(source)
+    let src = _source.shape(source)
+    let layer = _layer._vector(name, src)
     if (source.style) {
-      out.style = _style(source.style)
+      layer.setStyle(_style(source.style))
     } else {
-      out.style = _style({type: 'Polygon'})
+      layer.setStyle(_style({type: 'Polygon'}))
     }
-    return new openlayers.layer.Vector(out)
+    return layer
   },
   /**
    * radius
@@ -103,16 +110,31 @@ export default _layer = {
    */
   radius (name, source) {
     // should be an object of coordinates (object), style (optional)
-    let out = {}
-    let style = null
-    out.name = name
-    out.source = _source.radius(source)
+    let src = _source.radius(source)
+    let layer = _layer._vector(name, src)
     if (source.style) {
-      out.style = _style(source.style)
+      layer.setStyle(_style(source.style))
     } else {
-      out.style = _style({type: 'Polygon'})
+      layer.setStyle(_style({type: 'Polygon'}))
     }
-    return new openlayers.layer.Vector(out)
+    return layer
+  },
+  /**
+   * circle
+   * Draw a polygon shape based on a radius shape
+   * Note: converts a radius shape into a series of points
+   * that become a polygon that is displayed as a circle
+   *
+   */
+  circle (name, source) {
+    let src = _source.circle(source)
+    let layer = _layer._vector(name, src)
+    if (source.style) {
+      layer.setStyle(_style(source.style))
+    } else {
+      layer.setStyle(_style({type: 'Polygon'}))
+    }
+    return layer
   },
   /**
    * geojson
@@ -123,16 +145,32 @@ export default _layer = {
    * @returns {ol.layer.Vector}
    */
   geojson (name, source) {
-    let out = {}
-    let style = null
-    out.name = name
-    out.source = _source.geojson(source.coordinates)
+    let src = _source.geojson(source.coordinates)
+    let layer = _layer._vector(name, src)
     if (source.style) {
-      out.style = _style(source.style)
+      layer.setStyle(_style(source.style))
     } else {
-      out.style = _style({type: 'MultiPolygon'})
+      layer.setStyle(_style({type: 'MultiPolygon'}))
     }
-    return new ol.layer.Vector(out)
+    return layer
+  },
+  /**
+   * compound
+   * Draw a compound shape from two or more polygon shapes
+   *
+   * @param name String
+   * @param source Object
+   * @returns {ol.layer.Vector}
+   */
+  compound (name, source) {
+    let src = _source.compound(source.shapes)
+    let layer = _layer._vector(name, src)
+    if (source.style) {
+      layer.setStyle(_style(source.style))
+    } else {
+      layer.setStyle(_style({type: 'MultiPolygon'}))
+    }
+    return layer
   },
   /**
    * multi
@@ -142,20 +180,18 @@ export default _layer = {
    * @returns {ol.layer.Vector}
    */
   multi (name, source) {
-    let out = {}
-    let style = null
-    out.name = name
-    out.source = _source.multi(source)
+    let src = _source.multi(source)
+    let layer = _layer._vector(name, src)
     if (source.style) {
       if(source.style.method) {
-        out.style = source.style.method
+        layer.setStyle(source.style.method)
       } else {
-        out.style = _style(source.style)
+        layer.setStyle(_style(source.style))
       }
     } else {
-      out.style = _style({type: 'Polygon'})
+      layer.setStyle(_style({type: 'Polygon'}))
     }
-    return new openlayers.layer.Vector(out)
+    return layer
   },
   /**
    * group
@@ -179,12 +215,7 @@ export default _layer = {
    * @param data
    * @returns {ol.layer.*}
    */
-  empty (name, source) {
-    let out = {}
-    out.name = name
-    if(source) {
-      out.source = source
-    }
-    return new openlayers.layer.Vector(out)
+  empty () {
+    return new openlayers.layer.Vector()
   }
 }

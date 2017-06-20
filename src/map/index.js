@@ -16,150 +16,151 @@ let _extents = (coords) => {
   return openlayers.proj.transformExtent(out, openlayers.proj.get('EPSG:4326'), openlayers.proj.get('EPSG:3857'))
 }
 
-let map = () => {
-  this.ol = {}
-  this.target = ''
-  this.center = [0, 0]
-  this.zoom = 4
-  this.extents = []
-  this.layers = []
-  this.defaults = defaults
-}
-
-map.prototype.draw = (target, data) => {
-  if (!target) {
-    return false
-  } else {
-    this.target = target
+class map {
+  constructor () {
+    this.ol = {}
+    this.target = ''
+    this.center = [0, 0]
+    this.zoom = 4
+    this.extents = []
+    this.defaults = defaults
   }
-  if (data) {
-    if (data.center) {
-      this.center = data.center
+
+  draw (target, data) {
+    let layers = []
+    if (!target) {
+      return false
+    } else {
+      this.target = target
     }
-    if (data.zoom) {
-      this.zoom = data.zoom
-    }
-    if (data.extents) {
-      this.extents = _extents(data.extents)
-    }
-    if (data.styles) {
-      for (var s in data.styles) {
-        if (defaults.styles[s]) {
-          let style = data.styles[s]
-          for(var t in style) {
-            defaults.styles[s][t] = style[t]
+    if (data) {
+      if (data.center) {
+        this.center = data.center
+      }
+      if (data.zoom) {
+        this.zoom = data.zoom
+      }
+      if (data.extents) {
+        this.extents = _extents(data.extents)
+      }
+      if (data.styles) {
+        for (var s in data.styles) {
+          if (defaults.styles[s]) {
+            let style = data.styles[s]
+            for (var t in style) {
+              defaults.styles[s][t] = style[t]
+            }
           }
         }
       }
-    }
-    if (data.base) {
-      this.layers.push(_layer.draw(data.base))
-    } else {
-      this.layers.push(_layer.draw())
-    }
-  } else {
-    this.layers.push(_layer.draw())
-  }
-  let mapdata = {
-    target: this.target,
-    layers: this.layers,
-    view: _view(this.center, this.zoom)
-  }
-  if(data && data.controls === false) {
-    mapdata.controls = openlayers.control.defaults({
-      zoom: false,
-      attribution: false,
-      rotate: false
-    })
-  }
-  this.ol = new openlayers.Map(mapdata)
-  if(data.extents) {
-    this.ol.getView().fit(this.extents, this.ol.getSize())
-  }
-  return this.ol
-}
-
-map.prototype.getLayers = (exclude) => {
-  let out = []
-  if (exclude) {
-    this.layers.forEach((lyr) => {
-      if (!(lyr instanceof openlayers.layer.Group)) {
-        out.push(lyr)
-      }
-    })
-  } else {
-    this.layers.forEach((lyr) => {
-      if (lyr instanceof openlayers.layer.Group) {
-        lyr.getLayers().forEach((sublyr) => {
-          out.push(sublyr)
-        })
+      if (data.base) {
+        layers.push(_layer.draw(data.base))
       } else {
-        out.push(lyr)
+        layers.push(_layer.draw())
+      }
+    } else {
+      layers.push(_layer.draw())
+    }
+    let mapdata = {
+      target: this.target,
+      layers: layers,
+      view: _view(this.center, this.zoom)
+    }
+    if (data && data.controls === false) {
+      mapdata.controls = openlayers.control.defaults({
+        zoom: false,
+        attribution: false,
+        rotate: false
+      })
+    }
+    this.ol = new openlayers.Map(mapdata)
+    if (data.extents) {
+      this.ol.getView().fit(this.extents, this.ol.getSize())
+    }
+    return this.ol
+  }
+
+  getLayers (exclude) {
+    let out = []
+    if (exclude) {
+      this.ol.getLayers().forEach((lyr) => {
+        if (!(lyr instanceof openlayers.layer.Group)) {
+          out.push(lyr)
+        }
+      })
+    } else {
+      this.ol.getLayers().forEach((lyr) => {
+        if (lyr instanceof openlayers.layer.Group) {
+          lyr.getLayers().forEach((sublyr) => {
+            out.push(sublyr)
+          })
+        } else {
+          out.push(lyr)
+        }
+      })
+    }
+    return out
+  }
+
+  getLayer (name) {
+    let out = []
+    this.getLayers().forEach((lyr) => {
+      if (name === lyr.get('name')) {
+        out = lyr
       }
     })
+    return out
   }
-  return out
-}
 
-map.prototype.getLayer = (name) => {
-  let out = []
-  let _this = this
-  let all = _this.getLayers()
-  all.forEach((lyr) => {
-    if (name === lyr.get('name')) {
-      out = lyr
-    }
-  })
-  return out
-}
-
-map.prototype.getFeatures = function (layer) {
-  return this.getLayer(layer).getSource().getFeatures(extent)
-}
-
-map.prototype.getFeature = function (layer, reference) {
-  return this.getLayer(layer).getSource().getClosestFeatureToCoordinate(reference)
-}
-
-map.prototype.layer = (data) => {
-  // Inject the global styles...
-  data.defaultStyle = this.defaults.styles.pointStyle
-  let out = _layer.draw(data)
-  this.layers.push(out)
-  this.ol.addLayer(out)
-  return out
-}
-
-map.prototype.animate = (data, interval) => {
-  var set = []
-  data.getLayers().forEach((layer) => {
-    set.push(layer)
-  })
-  var iterant = 0
-  for (var s = 1; s < set.length; s++) {
-    set[s].setVisible(false)
+  getFeatures (layer) {
+    return this.getLayer(layer).getSource().getFeatures()
   }
-  setInterval(() => {
-    set[iterant].setVisible(!set[iterant].getVisible())
-    iterant++
-    if (iterant === set.length) {
-      iterant = 0
-    }
-    set[iterant].setVisible(!set[iterant].getVisible())
-  }, interval)
-}
 
-map.prototype.panto = (data) => {
-  if(data.extents) {
-    let extent = _extents(data.extents)
-    this.ol.getView().fit(extent, {duration: this.duration})
+  getFeature (layer, reference) {
+    return this.getLayer(layer).getSource().getClosestFeatureToCoordinate(reference)
   }
-  if(data.zoom) {
-    this.ol.getView().animate({
-      center: openlayers.proj.fromLonLat(data.center),
-      duration: data.duration,
-      zoom: data.zoom
+
+  layer (data) {
+    let out = _layer.draw(data)
+    this.ol.addLayer(out)
+    return out
+  }
+
+  animate (data, interval) {
+    var set = []
+    data.getLayers().forEach((layer) => {
+      set.push(layer)
     })
+    var iterant = 0
+    for (var s = 1; s < set.length; s++) {
+      set[s].setVisible(false)
+    }
+    setInterval(() => {
+      set[iterant].setVisible(!set[iterant].getVisible())
+      iterant++
+      if (iterant === set.length) {
+        iterant = 0
+      }
+      set[iterant].setVisible(!set[iterant].getVisible())
+    }, interval)
+  }
+
+  panto (data) {
+    if (data.extents) {
+      let extent = _extents(data.extents)
+      this.ol.getView().fit(extent, {duration: this.duration})
+    }
+    if (data.zoom) {
+      this.ol.getView().animate({
+        center: openlayers.proj.fromLonLat(data.center),
+        duration: data.duration,
+        zoom: data.zoom
+      })
+    }
+  }
+
+  normalize (data) {
+    return openlayers.proj.transform(data.coordinates, data.from, data.to)
   }
 }
 

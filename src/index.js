@@ -45,6 +45,11 @@ function plugin (Vue, options) {
       panto: (data) => {
         return Vue.map.panto(data)
       }
+    },
+    functions: {
+      normalize: (data) => {
+        return Vue.map.normalize(data)
+      }
     }
   }
 }

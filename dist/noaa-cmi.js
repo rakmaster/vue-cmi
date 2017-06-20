@@ -92859,8 +92859,6 @@ var _style = function (data) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__layer__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__defaults__ = __webpack_require__(1);
 
-var this$1 = this;
-
 
 
 var openlayers = __webpack_require__(0)
@@ -92878,79 +92876,79 @@ var _extents = function (coords) {
   return openlayers.proj.transformExtent(out, openlayers.proj.get('EPSG:4326'), openlayers.proj.get('EPSG:3857'))
 }
 
-var map = function () {
-  this$1.ol = {}
-  this$1.target = ''
-  this$1.center = [0, 0]
-  this$1.zoom = 4
-  this$1.extents = []
-  this$1.layers = []
-  this$1.defaults = __WEBPACK_IMPORTED_MODULE_1__defaults__["a" /* defaults */]
-}
+var map = function map () {
+  this.ol = {}
+  this.target = ''
+  this.center = [0, 0]
+  this.zoom = 4
+  this.extents = []
+  this.defaults = __WEBPACK_IMPORTED_MODULE_1__defaults__["a" /* defaults */]
+};
 
-map.prototype.draw = function (target, data) {
+map.prototype.draw = function draw (target, data) {
+  var layers = []
   if (!target) {
     return false
   } else {
-    this$1.target = target
+    this.target = target
   }
   if (data) {
     if (data.center) {
-      this$1.center = data.center
+      this.center = data.center
     }
     if (data.zoom) {
-      this$1.zoom = data.zoom
+      this.zoom = data.zoom
     }
     if (data.extents) {
-      this$1.extents = _extents(data.extents)
+      this.extents = _extents(data.extents)
     }
     if (data.styles) {
       for (var s in data.styles) {
         if (__WEBPACK_IMPORTED_MODULE_1__defaults__["a" /* defaults */].styles[s]) {
           var style = data.styles[s]
-          for(var t in style) {
+          for (var t in style) {
             __WEBPACK_IMPORTED_MODULE_1__defaults__["a" /* defaults */].styles[s][t] = style[t]
           }
         }
       }
     }
     if (data.base) {
-      this$1.layers.push(__WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw(data.base))
+      layers.push(__WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw(data.base))
     } else {
-      this$1.layers.push(__WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw())
+      layers.push(__WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw())
     }
   } else {
-    this$1.layers.push(__WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw())
+    layers.push(__WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw())
   }
   var mapdata = {
-    target: this$1.target,
-    layers: this$1.layers,
-    view: _view(this$1.center, this$1.zoom)
+    target: this.target,
+    layers: layers,
+    view: _view(this.center, this.zoom)
   }
-  if(data && data.controls === false) {
+  if (data && data.controls === false) {
     mapdata.controls = openlayers.control.defaults({
       zoom: false,
       attribution: false,
       rotate: false
     })
   }
-  this$1.ol = new openlayers.Map(mapdata)
-  if(data.extents) {
-    this$1.ol.getView().fit(this$1.extents, this$1.ol.getSize())
+  this.ol = new openlayers.Map(mapdata)
+  if (data.extents) {
+    this.ol.getView().fit(this.extents, this.ol.getSize())
   }
-  return this$1.ol
-}
+  return this.ol
+};
 
-map.prototype.getLayers = function (exclude) {
+map.prototype.getLayers = function getLayers (exclude) {
   var out = []
   if (exclude) {
-    this$1.layers.forEach(function (lyr) {
+    this.ol.getLayers().forEach(function (lyr) {
       if (!(lyr instanceof openlayers.layer.Group)) {
         out.push(lyr)
       }
     })
   } else {
-    this$1.layers.forEach(function (lyr) {
+    this.ol.getLayers().forEach(function (lyr) {
       if (lyr instanceof openlayers.layer.Group) {
         lyr.getLayers().forEach(function (sublyr) {
           out.push(sublyr)
@@ -92961,38 +92959,33 @@ map.prototype.getLayers = function (exclude) {
     })
   }
   return out
-}
+};
 
-map.prototype.getLayer = function (name) {
+map.prototype.getLayer = function getLayer (name) {
   var out = []
-  var _this = this$1
-  var all = _this.getLayers()
-  all.forEach(function (lyr) {
+  this.getLayers().forEach(function (lyr) {
     if (name === lyr.get('name')) {
       out = lyr
     }
   })
   return out
-}
+};
 
-map.prototype.getFeatures = function (layer) {
-  return this.getLayer(layer).getSource().getFeatures(extent)
-}
+map.prototype.getFeatures = function getFeatures (layer) {
+  return this.getLayer(layer).getSource().getFeatures()
+};
 
-map.prototype.getFeature = function (layer, reference) {
+map.prototype.getFeature = function getFeature (layer, reference) {
   return this.getLayer(layer).getSource().getClosestFeatureToCoordinate(reference)
-}
+};
 
-map.prototype.layer = function (data) {
-  // Inject the global styles...
-  data.defaultStyle = this$1.defaults.styles.pointStyle
+map.prototype.layer = function layer (data) {
   var out = __WEBPACK_IMPORTED_MODULE_0__layer__["a" /* default */].draw(data)
-  this$1.layers.push(out)
-  this$1.ol.addLayer(out)
+  this.ol.addLayer(out)
   return out
-}
+};
 
-map.prototype.animate = function (data, interval) {
+map.prototype.animate = function animate (data, interval) {
   var set = []
   data.getLayers().forEach(function (layer) {
     set.push(layer)
@@ -93009,21 +93002,25 @@ map.prototype.animate = function (data, interval) {
     }
     set[iterant].setVisible(!set[iterant].getVisible())
   }, interval)
-}
+};
 
-map.prototype.panto = function (data) {
-  if(data.extents) {
+map.prototype.panto = function panto (data) {
+  if (data.extents) {
     var extent = _extents(data.extents)
-    this$1.ol.getView().fit(extent, {duration: this$1.duration})
+    this.ol.getView().fit(extent, {duration: this.duration})
   }
-  if(data.zoom) {
-    this$1.ol.getView().animate({
+  if (data.zoom) {
+    this.ol.getView().animate({
       center: openlayers.proj.fromLonLat(data.center),
       duration: data.duration,
       zoom: data.zoom
     })
   }
-}
+};
+
+map.prototype.normalize = function normalize (data) {
+  return openlayers.proj.transform(data.coordinates, data.from, data.to)
+};
 
 /* harmony default export */ __webpack_exports__["a"] = (map);
 
@@ -93140,6 +93137,11 @@ function plugin (Vue, options) {
       panto: function (data) {
         return Vue.map.panto(data)
       }
+    },
+    functions: {
+      normalize: function (data) {
+        return Vue.map.normalize(data)
+      }
     }
   }
 }
@@ -93171,6 +93173,16 @@ var openlayers = __webpack_require__(0)
 
 var _layer = {}
 /* harmony default export */ __webpack_exports__["a"] = (_layer = {
+  /**
+   * _vector
+   * Utility method to do the standard vector layer creation
+   */
+  _vector: function _vector (name, source) {
+    var layer = new openlayers.layer.Vector()
+    layer.set('name', name)
+    layer.setSource(source)
+    return layer
+  },
   /**
    * draw
    * Master controller for drawing a layer
@@ -93205,10 +93217,10 @@ var _layer = {}
    */
   tile: function tile (name, source) {
     // source should be an object of attributions, url
-    var out = {}
-    out.name = name
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].xyz(source)
-    return new openlayers.layer.Tile(out)
+    var layer = new openlayers.layer.Tile()
+    layer.set('name', name)
+    layer.setSource(__WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].xyz(source))
+    return layer
   },
   /**
    * image
@@ -93223,10 +93235,10 @@ var _layer = {}
    */
   image: function image (name, source) {
     // source should be an object of coordinates, attributions, url
-    var out = {}
-    out.name = name
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].image(source)
-    return new openlayers.layer.Image(out)
+    var layer = new openlayers.layer.Image()
+    layer.set('name', name)
+    layer.setSource(__WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].image(source))
+    return layer
   },
   /**
    * shape
@@ -93239,17 +93251,14 @@ var _layer = {}
    * @returns {ol.layer.Vector|ol.source.Vector|ol.test.rendering.layer.Vector}
    */
   shape: function shape (name, source) {
-    // should be an object of coordinates (array), style (optional)
-    var out = {}
-    var style = null
-    out.name = name
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].shape(source)
+    var src = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].shape(source)
+    var layer = _layer._vector(name, src)
     if (source.style) {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style))
     } else {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'})
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'}))
     }
-    return new openlayers.layer.Vector(out)
+    return layer
   },
   /**
    * radius
@@ -93263,16 +93272,31 @@ var _layer = {}
    */
   radius: function radius (name, source) {
     // should be an object of coordinates (object), style (optional)
-    var out = {}
-    var style = null
-    out.name = name
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].radius(source)
+    var src = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].radius(source)
+    var layer = _layer._vector(name, src)
     if (source.style) {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style))
     } else {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'})
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'}))
     }
-    return new openlayers.layer.Vector(out)
+    return layer
+  },
+  /**
+   * circle
+   * Draw a polygon shape based on a radius shape
+   * Note: converts a radius shape into a series of points
+   * that become a polygon that is displayed as a circle
+   *
+   */
+  circle: function circle (name, source) {
+    var src = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].circle(source)
+    var layer = _layer._vector(name, src)
+    if (source.style) {
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style))
+    } else {
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'}))
+    }
+    return layer
   },
   /**
    * geojson
@@ -93283,16 +93307,32 @@ var _layer = {}
    * @returns {ol.layer.Vector}
    */
   geojson: function geojson (name, source) {
-    var out = {}
-    var style = null
-    out.name = name
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].geojson(source.coordinates)
+    var src = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].geojson(source.coordinates)
+    var layer = _layer._vector(name, src)
     if (source.style) {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style))
     } else {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'MultiPolygon'})
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'MultiPolygon'}))
     }
-    return new ol.layer.Vector(out)
+    return layer
+  },
+  /**
+   * compound
+   * Draw a compound shape from two or more polygon shapes
+   *
+   * @param name String
+   * @param source Object
+   * @returns {ol.layer.Vector}
+   */
+  compound: function compound (name, source) {
+    var src = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].compound(source.shapes)
+    var layer = _layer._vector(name, src)
+    if (source.style) {
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style))
+    } else {
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'MultiPolygon'}))
+    }
+    return layer
   },
   /**
    * multi
@@ -93302,20 +93342,18 @@ var _layer = {}
    * @returns {ol.layer.Vector}
    */
   multi: function multi (name, source) {
-    var out = {}
-    var style = null
-    out.name = name
-    out.source = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].multi(source)
+    var src = __WEBPACK_IMPORTED_MODULE_0__source__["a" /* default */].multi(source)
+    var layer = _layer._vector(name, src)
     if (source.style) {
       if(source.style.method) {
-        out.style = source.style.method
+        layer.setStyle(source.style.method)
       } else {
-        out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style)
+        layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])(source.style))
       }
     } else {
-      out.style = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'})
+      layer.setStyle(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__style__["a" /* default */])({type: 'Polygon'}))
     }
-    return new openlayers.layer.Vector(out)
+    return layer
   },
   /**
    * group
@@ -93339,13 +93377,8 @@ var _layer = {}
    * @param data
    * @returns {ol.layer.*}
    */
-  empty: function empty (name, source) {
-    var out = {}
-    out.name = name
-    if(source) {
-      out.source = source
-    }
-    return new openlayers.layer.Vector(out)
+  empty: function empty () {
+    return new openlayers.layer.Vector()
   }
 });
 
@@ -93371,15 +93404,15 @@ var _source = {}
    * @private
    */
   __feature: function (data, style, state) {
-    var source = {}
-    source.geometry = data
+    var feature = new openlayers.Feature()
+    feature.setGeometry(data)
     if (style) {
-      source.style = style
+      feature.setStyle(style)
     }
     if (state) {
-      source.state = state
+      feature.set('state', state)
     }
-    return new openlayers.Feature(source)
+    return feature
   },
   /**
    * __attributions
@@ -93418,6 +93451,23 @@ var _source = {}
     return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857')
   },
   /**
+   * __stylize
+   * Test if this feature has a unique style and apply that style
+   *
+   * @param data
+   * @returns {ol.Style}
+   * @private
+   */
+  __stylize: function (data) {
+    var styl
+    if (data.method) {
+      styl = data.method
+    } else {
+      styl = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(data)
+    }
+    return styl
+  },
+  /**
    * _point
    * Utility method for creating a single point feature.
    * Points are unique in that each point can have a
@@ -93433,20 +93483,13 @@ var _source = {}
       coords = data
     } else {
       coords = data.coordinates
-      if(data.state) {
+      if (data.state) {
         state = data.state
       }
     }
     if (typeof data.style !== 'undefined') {
-      if (data.style.method) {
-        var styleFunc = data.style.method
-        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styleFunc, 'inactive')
-      } else {
-        styl = data.style
-        styl.type = 'Point'
-        styl = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__style__["a" /* default */])(styl)
-        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
-      }
+      styl = _source.__stylize(data.style)
+      feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
     } else {
       feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), null, state)
     }
@@ -93460,11 +93503,18 @@ var _source = {}
    * @returns {ol.Feature}
    */
   _shape: function (data) {
+    var styl, feature
     var vertices = []
     for (var d = 0; d < data.coordinates.length; d++) {
-      vertices.push(_source._normalize(data.coordinates[d]))
+      vertices.push(_source.__normalize(data.coordinates[d]))
     }
-    return _source._feature(new openlayers.geom.Polygon([vertices]))
+    if (typeof data.style !== 'undefined') {
+      styl = _source.__stylize(data.style)
+      feature = _source.__feature(new openlayers.geom.Polygon([vertices]), styl)
+    } else {
+      feature = _source.__feature(new openlayers.geom.Polygon([vertices]))
+    }
+    return feature
   },
   /**
    * _xyz
@@ -93517,12 +93567,13 @@ var _source = {}
   },
   /**
    * _radius
-   * Create one circle feature
+   * Create one radius feature
    *
    * @param data Object
    * @returns {ol.Feature}
    */
   _radius: function (data) {
+    var styl, feature
     var radiusMiles = data.radius
     var arrConversion = []
     arrConversion['degrees'] = (1 / (60 * 1.1508))
@@ -93536,8 +93587,38 @@ var _source = {}
     // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
     // adjust by root 2 so we get the actual sides in length that we want
     var r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
-    var c = _source._normalize(data.coordinates)
-    return _source._feature(new openlayers.geom.Circle(c, r))
+    var c = _source.__normalize(data.coordinates)
+    if(typeof data.style !== 'undefined') {
+      styl = _source.__stylize(data.style)
+      feature = _source.__feature(new openlayers.geom.Circle(c, r), styl)
+    } else {
+      feature = _source.__feature(new openlayers.geom.Circle(c, r))
+    }
+    return feature
+  },
+  /**
+   * _circle
+   * Create a circle from a radius
+   *
+   * @param data Object
+   * @returns {ol.Feature}
+   */
+  _circle: function (data) {
+    var sides, angle
+    var radius = _source._radius(data).getGeometry()
+    if (data.sides) {
+      sides = data.sides
+    } else {
+      sides = 32
+    }
+    if(data.angle) {
+      angle = data.angle
+    } else {
+      angle = 0
+    }
+    var circle = openlayers.geom.Polygon.fromCircle(radius, sides, angle)
+    var feature = _source.__feature(circle)
+    return feature
   },
   /**
    * default
@@ -93577,7 +93658,9 @@ var _source = {}
    */
   point: function (data) {
     var features = [_source._point(data)]
-    return new openlayers.source.Vector(features)
+    var source = new openlayers.source.Vector()
+    source.addFeatures(features)
+    return source
   },
   /**
    * shape
@@ -93588,17 +93671,29 @@ var _source = {}
    */
   shape: function (data) {
     var features = [_source._shape(data)]
-    return new openlayers.source.Vector(features)
+    var source = new openlayers.source.Vector()
+    source.addFeatures(features)
+    return source
   },
   /**
    * radius
-   * Create one vector source with one circle shape feature
+   * Create one vector source with one radius shape feature
    *
    * @param data Object
    * @return {ol.source.Vector}
    */
   radius: function (data) {
     var features = [_source._radius(data)]
+    var source = new openlayers.source.Vector()
+    source.addFeatures(features)
+    return source
+  },
+  /**
+   * circle
+   * Create one vector source with one circle shape feature
+   */
+  circle: function (data) {
+    var features = [_source._circle(data)]
     return new openlayers.source.Vector(features)
   },
   /**
@@ -93609,14 +93704,12 @@ var _source = {}
    * @return {ol.source.Vector}
    */
   multi: function (data) {
-    var out = {}
-    var features = []
+    var source = new openlayers.source.Vector()
     for (var d = 0; d < data.length; d++) {
-      var met = _source['_' + data[d].type]
-      features.push(met(data[d]))
+      var method = _source['_' + data[d].type]
+      source.addFeature(method(data[d]))
     }
-    out.features = features
-    return new openlayers.source.Vector(out)
+    return source
   },
   /**
    * geojson
@@ -93639,6 +93732,31 @@ var _source = {}
       })
     }
     return out
+  },
+  /**
+   * compound
+   * Create a compound shape based on a series of coordinates
+   *
+   * @param data Array
+   * @return {ol.source.Vector}
+   */
+  compound: function (data) {
+    var coords = []
+    var source = new openlayers.source.Vector()
+    for (var d in data) {
+      // Extract the geometry from the shape...
+      var method = _source['_' + data[d].type]
+      var shape = method(data[d])
+      var geom = shape.getGeometry().getCoordinates()[0].slice()
+      if(geom.length % 2 === 0) {
+        var newGeom = geom.slice()
+        geom.push(newGeom[0])
+      }
+      coords.push(geom)
+    }
+    var feature = _source.__feature(new openlayers.geom.Polygon(coords))
+    source.addFeature(feature)
+    return source
   }
 });
 

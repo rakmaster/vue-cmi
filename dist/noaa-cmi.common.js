@@ -2,8 +2,10 @@ var openlayers;
 if(! window.ol) {
   console.log('NOAA CMI Requires Openlayers 4.0.1');
 } else {
+
   openlayers = window.ol;
-  var defaults = {
+
+  var _defaults = {
     duration: 500,
     styles: {
       stroke: {
@@ -11,7 +13,7 @@ if(! window.ol) {
         width: 1
       },
       fill: {
-        color: 'rgba(0,80,180,1.0)'
+        color:  'rgba(0,80,180,1.0)'
       },
       text: {
         character: '\uf041',
@@ -28,14 +30,14 @@ if(! window.ol) {
     return new openlayers.style.Stroke({
       color: stroke.color,
       width: stroke.width
-    })
-  };
+    });
+  }
 
   var _fill = function (fill) {
     return new openlayers.style.Fill({
       color: fill.color
     });
-  };
+  }
 
   var _text = function (text, fill) {
     return new openlayers.style.Text({
@@ -44,16 +46,16 @@ if(! window.ol) {
       textBaseline: text.baseline,
       fill: _fill(fill)
     });
-  };
+  }
 
   var _arrange = function (data) {
     var out = {};
-    for (var v in __WEBPACK_IMPORTED_MODULE_0__defaults__["a" /* defaults */].styles) {
-      out[v] = __WEBPACK_IMPORTED_MODULE_0__defaults__["a" /* defaults */].styles[v];
+    for(var v in _defaults.styles) {
+      out[v] = _defaults.styles[v];
     }
     for (var d in data) {
-      if (out[d]) {
-        if (data[d] !== null) {
+      if(out[d]) {
+        if(data[d] !== null) {
           for (var s in data[d]) {
             out[d][s] = data[d][s];
           }
@@ -139,7 +141,7 @@ if(! window.ol) {
     }
     out = methods[data.type](stl);
     return out;
-  };
+  }
 
   var _view = function (center, zoom) {
     return new openlayers
@@ -147,12 +149,12 @@ if(! window.ol) {
         center: openlayers.proj.fromLonLat(center),
         zoom: zoom
       });
-  };
+  }
 
   var _extents = function (coords) {
     var out = openlayers.extent.boundingExtent(coords);
     return openlayers.proj.transformExtent(out, openlayers.proj.get('EPSG:4326'), openlayers.proj.get('EPSG:3857'));
-  };
+  }
 
   var _source = {
     /**
@@ -164,15 +166,15 @@ if(! window.ol) {
      * @private
      */
     __feature: function (data, style, state) {
-      var source = {};
-      source.geometry = data;
+      var feature = new openlayers.Feature();
+      feature.setGeometry(data);
       if (style) {
-        source.style = style;
+        feature.setStyle(style);
       }
       if (state) {
-        source.state = state;
+        feature.set('state', state);
       }
-      return new openlayers.Feature(source);
+      return feature;
     },
     /**
      * __attributions
@@ -193,7 +195,7 @@ if(! window.ol) {
         } else {
           var attribution = new openlayers.Attribution({
             html: data
-          });
+          })
           attributions.push(attribution);
         }
       }
@@ -209,6 +211,23 @@ if(! window.ol) {
      */
     __normalize: function (coordinates) {
       return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857');
+    },
+    /**
+     * __stylize
+     * Test if this feature has a unique style and apply that style
+     *
+     * @param data
+     * @returns {ol.Style}
+     * @private
+     */
+    __stylize: function (data) {
+      var styl;
+      if (data.method) {
+        styl = data.method;
+      } else {
+        styl = _style(data);
+      }
+      return styl;
     },
     /**
      * _point
@@ -231,15 +250,8 @@ if(! window.ol) {
         }
       }
       if (typeof data.style !== 'undefined') {
-        if (data.style.method) {
-          var styleFunc = data.style.method;
-          feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styleFunc, 'inactive');
-        } else {
-          styl = data.style;
-          styl.type = 'Point';
-          styl = _style(styl);
-          feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state);
-        }
+        styl = _source.__stylize(data.style);
+        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state);
       } else {
         feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), null, state);
       }
@@ -253,11 +265,18 @@ if(! window.ol) {
      * @returns {ol.Feature}
      */
     _shape: function (data) {
+      var styl, feature;
       var vertices = [];
       for (var d = 0; d < data.coordinates.length; d++) {
-        vertices.push(_source._normalize(data.coordinates[d]));
+        vertices.push(_source.__normalize(data.coordinates[d]));
       }
-      return _source._feature(new openlayers.geom.Polygon([vertices]));
+      if (typeof data.style !== 'undefined') {
+        styl = _source.__stylize(data.style);
+        feature = _source.__feature(new openlayers.geom.Polygon([vertices]), styl);
+      } else {
+        feature = _source.__feature(new openlayers.geom.Polygon([vertices]));
+      }
+      return feature;
     },
     /**
      * _xyz
@@ -310,12 +329,13 @@ if(! window.ol) {
     },
     /**
      * _radius
-     * Create one circle feature
+     * Create one radius feature
      *
      * @param data Object
      * @returns {ol.Feature}
      */
     _radius: function (data) {
+      var styl, feature;
       var radiusMiles = data.radius;
       var arrConversion = [];
       arrConversion['degrees'] = (1 / (60 * 1.1508));
@@ -329,8 +349,38 @@ if(! window.ol) {
       // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
       // adjust by root 2 so we get the actual sides in length that we want
       var r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2);
-      var c = _source._normalize(data.coordinates);
-      return _source._feature(new openlayers.geom.Circle(c, r));
+      var c = _source.__normalize(data.coordinates);
+      if(typeof data.style !== 'undefined') {
+        styl = _source.__stylize(data.style);
+        feature = _source.__feature(new openlayers.geom.Circle(c, r), styl);
+      } else {
+        feature = _source.__feature(new openlayers.geom.Circle(c, r));
+      }
+      return feature;
+    },
+    /**
+     * _circle
+     * Create a circle from a radius
+     *
+     * @param data Object
+     * @returns {ol.Feature}
+     */
+    _circle: function (data) {
+      var sides, angle;
+      var radius = _source._radius(data).getGeometry();
+      if (data.sides) {
+        sides = data.sides;
+      } else {
+        sides = 32;
+      }
+      if(data.angle) {
+        angle = data.angle;
+      } else {
+        angle = 0;
+      }
+      var circle = openlayers.geom.Polygon.fromCircle(radius, sides, angle);
+      var feature = _source.__feature(circle);
+      return feature;
     },
     /**
      * default
@@ -370,7 +420,9 @@ if(! window.ol) {
      */
     point: function (data) {
       var features = [_source._point(data)];
-      return new openlayers.source.Vector(features);
+      var source = new openlayers.source.Vector();
+      source.addFeatures(features);
+      return source;
     },
     /**
      * shape
@@ -381,17 +433,29 @@ if(! window.ol) {
      */
     shape: function (data) {
       var features = [_source._shape(data)];
-      return new openlayers.source.Vector(features);
+      var source = new openlayers.source.Vector();
+      source.addFeatures(features);
+      return source;
     },
     /**
      * radius
-     * Create one vector source with one circle shape feature
+     * Create one vector source with one radius shape feature
      *
      * @param data Object
      * @return {ol.source.Vector}
      */
     radius: function (data) {
       var features = [_source._radius(data)];
+      var source = new openlayers.source.Vector();
+      source.addFeatures(features);
+      return source;
+    },
+    /**
+     * circle
+     * Create one vector source with one circle shape feature
+     */
+    circle: function (data) {
+      var features = [_source._circle(data)];
       return new openlayers.source.Vector(features);
     },
     /**
@@ -402,14 +466,12 @@ if(! window.ol) {
      * @return {ol.source.Vector}
      */
     multi: function (data) {
-      var out = {};
-      var features = [];
+      var source = new openlayers.source.Vector();
       for (var d = 0; d < data.length; d++) {
-        var met = _source['_' + data[d].type];
-        features.push(met(data[d]));
+        var method = _source['_' + data[d].type];
+        source.addFeature(method(data[d]));
       }
-      out.features = features;
-      return new openlayers.source.Vector(out);
+      return source;
     },
     /**
      * geojson
@@ -432,10 +494,45 @@ if(! window.ol) {
         });
       }
       return out;
+    },
+    /**
+     * compound
+     * Create a compound shape based on a series of coordinates
+     *
+     * @param data Array
+     * @return {ol.source.Vector}
+     */
+    compound: function (data) {
+      var coords = [];
+      var source = new openlayers.source.Vector();
+      for (var d in data) {
+        // Extract the geometry from the shape...
+        var method = _source['_' + data[d].type];
+        var shape = method(data[d]);
+        var geom = shape.getGeometry().getCoordinates()[0].slice();
+        if(geom.length % 2 === 0) {
+          var newGeom = geom.slice();
+          geom.push(newGeom[0]);
+        }
+        coords.push(geom);
+      }
+      var feature = _source.__feature(new openlayers.geom.Polygon(coords));
+      source.addFeature(feature);
+      return source;
     }
-  };
+  }
 
-  var _layer = {
+  _layer = {
+    /**
+     * _vector
+     * Utility method to do the standard vector layer creation
+     */
+    _vector: function _vector (name, source) {
+      var layer = new openlayers.layer.Vector();
+      layer.set('name', name);
+      layer.setSource(source);
+      return layer;
+    },
     /**
      * draw
      * Master controller for drawing a layer
@@ -444,7 +541,7 @@ if(! window.ol) {
      * @returns ol.layer.*
      */
     draw: function draw (data) {
-      var layer
+      var layer;
       if (!data) { // If no data, return the default OSM base layer. All maps have at least 1 layer
         layer = new openlayers.layer.Tile({name: 'base', source: _source.default()});
       } else { // Since we only ever draw one layer at a time, draw the layer passed to us
@@ -470,10 +567,10 @@ if(! window.ol) {
      */
     tile: function tile (name, source) {
       // source should be an object of attributions, url
-      var out = {};
-      out.name = name;
-      out.source = _source.xyz(source);
-      return new openlayers.layer.Tile(out);
+      var layer = new openlayers.layer.Tile();
+      layer.set('name', name);
+      layer.setSource(_source.xyz(source));
+      return layer
     },
     /**
      * image
@@ -488,10 +585,10 @@ if(! window.ol) {
      */
     image: function image (name, source) {
       // source should be an object of coordinates, attributions, url
-      var out = {};
-      out.name = name;
-      out.source = _source.image(source);
-      return new openlayers.layer.Image(out);
+      var layer = new openlayers.layer.Image();
+      layer.set('name', name);
+      layer.setSource(_source.image(source));
+      return layer;
     },
     /**
      * shape
@@ -504,17 +601,14 @@ if(! window.ol) {
      * @returns {ol.layer.Vector|ol.source.Vector|ol.test.rendering.layer.Vector}
      */
     shape: function shape (name, source) {
-      // should be an object of coordinates (array), style (optional)
-      var out = {};
-      var style = null;
-      out.name = name;
-      out.source = _source.shape(source);
+      var src = _source.shape(source);
+      var layer = _layer._vector(name, src);
       if (source.style) {
-        out.style = _style(source.style);
+        layer.setStyle(_style(source.style));
       } else {
-        out.style = _style({type: 'Polygon'});
+        layer.setStyle(_style({type: 'Polygon'}));
       }
-      return new openlayers.layer.Vector(out);
+      return layer;
     },
     /**
      * radius
@@ -528,16 +622,31 @@ if(! window.ol) {
      */
     radius: function radius (name, source) {
       // should be an object of coordinates (object), style (optional)
-      var out = {};
-      var style = null;
-      out.name = name;
-      out.source = _source.radius(source);
+      var src = _source.radius(source);
+      var layer = _layer._vector(name, src);
       if (source.style) {
-        out.style = _style(source.style);
+        layer.setStyle(_style(source.style));
       } else {
-        out.style = _style({type: 'Polygon'});
+        layer.setStyle(_style({type: 'Polygon'}));
       }
-      return new openlayers.layer.Vector(out);
+      return layer;
+    },
+    /**
+     * circle
+     * Draw a polygon shape based on a radius shape
+     * Note: converts a radius shape into a series of points
+     * that become a polygon that is displayed as a circle
+     *
+     */
+    circle: function circle (name, source) {
+      var src = _source.circle(source);
+      var layer = _layer._vector(name, src);
+      if (source.style) {
+        layer.setStyle(_style(source.style));
+      } else {
+        layer.setStyle(_style({type: 'Polygon'}));
+      }
+      return layer;
     },
     /**
      * geojson
@@ -548,16 +657,32 @@ if(! window.ol) {
      * @returns {ol.layer.Vector}
      */
     geojson: function geojson (name, source) {
-      var out = {};
-      var style = null;
-      out.name = name;
-      out.source = _source.geojson(source.coordinates);
+      var src = _source.geojson(source.coordinates);
+      var layer = _layer._vector(name, src);
       if (source.style) {
-        out.style = _style(source.style);
+        layer.setStyle(_style(source.style));
       } else {
-        out.style = _style({type: 'MultiPolygon'});
+        layer.setStyle(_style({type: 'MultiPolygon'}));
       }
-      return new ol.layer.Vector(out)
+      return layer;
+    },
+    /**
+     * compound
+     * Draw a compound shape from two or more polygon shapes
+     *
+     * @param name String
+     * @param source Object
+     * @returns {ol.layer.Vector}
+     */
+    compound: function compound (name, source) {
+      var src = _source.compound(source.shapes);
+      var layer = _layer._vector(name, src);
+      if (source.style) {
+        layer.setStyle(_style(source.style));
+      } else {
+        layer.setStyle(_style({type: 'MultiPolygon'}));
+      }
+      return layer;
     },
     /**
      * multi
@@ -567,20 +692,18 @@ if(! window.ol) {
      * @returns {ol.layer.Vector}
      */
     multi: function multi (name, source) {
-      var out = {};
-      var style = null;
-      out.name = name;
-      out.source = _source.multi(source);
+      var src = _source.multi(source);
+      var layer = _layer._vector(name, src);
       if (source.style) {
-        if (source.style.method) {
-          out.style = source.style.method;
+        if(source.style.method) {
+          layer.setStyle(source.style.method);
         } else {
-          out.style = _style(source.style);
+          layer.setStyle(_style(source.style));
         }
       } else {
-        out.style = _style({type: 'Polygon'});
+        layer.setStyle(_style({type: 'Polygon'}));
       }
-      return new openlayers.layer.Vector(out);
+      return layer;
     },
     /**
      * group
@@ -604,27 +727,22 @@ if(! window.ol) {
      * @param data
      * @returns {ol.layer.*}
      */
-    empty: function empty (name, source) {
-      var out = {};
-      out.name = name;
-      if (source) {
-        out.source = source;
-      }
-      return new openlayers.layer.Vector(out);
+    empty: function empty () {
+      return new openlayers.layer.Vector();
     }
-  };
+  }
 
-  var map = function () {
+  var map = function map () {
     this.ol = {};
     this.target = '';
     this.center = [0, 0];
     this.zoom = 4;
     this.extents = [];
-    this.layers = [];
-    this.defaults = defaults;
-  }
+    this.defaults = _defaults;
+  };
 
-  map.prototype.draw = function (target, data) {
+  map.prototype.draw = function draw (target, data) {
+    var layers = [];
     if (!target) {
       return false;
     } else {
@@ -642,25 +760,25 @@ if(! window.ol) {
       }
       if (data.styles) {
         for (var s in data.styles) {
-          if (this.defaults.styles[s]) {
+          if (_defaults.styles[s]) {
             var style = data.styles[s];
             for (var t in style) {
-              this.defaults.styles[s][t] = style[t];
+              _defaults.styles[s][t] = style[t];
             }
           }
         }
       }
       if (data.base) {
-        this.layers.push(_layer.draw(data.base));
+        layers.push(_layer.draw(data.base));
       } else {
-        this.layers.push(_layer.draw());
+        layers.push(_layer.draw());
       }
     } else {
-      this.layers.push(_layer.draw());
+      layers.push(_layer.draw());
     }
     var mapdata = {
       target: this.target,
-      layers: this.layers,
+      layers: layers,
       view: _view(this.center, this.zoom)
     };
     if (data && data.controls === false) {
@@ -675,18 +793,18 @@ if(! window.ol) {
       this.ol.getView().fit(this.extents, this.ol.getSize());
     }
     return this.ol;
-  }
+  };
 
-  map.prototype.getLayers = function (exclude) {
+  map.prototype.getLayers = function getLayers (exclude) {
     var out = [];
     if (exclude) {
-      this.layers.forEach(function (lyr) {
+      this.ol.getLayers().forEach(function (lyr) {
         if (!(lyr instanceof openlayers.layer.Group)) {
           out.push(lyr);
         }
-      })
+      });
     } else {
-      this.layers.forEach(function (lyr) {
+      this.ol.getLayers().forEach(function (lyr) {
         if (lyr instanceof openlayers.layer.Group) {
           lyr.getLayers().forEach(function (sublyr) {
             out.push(sublyr);
@@ -694,41 +812,36 @@ if(! window.ol) {
         } else {
           out.push(lyr);
         }
-      })
+      });
     }
     return out;
-  }
+  };
 
-  map.prototype.getLayer = function (name) {
+  map.prototype.getLayer = function getLayer (name) {
     var out = [];
-    var _this = this;
-    var all = _this.getLayers();
-    all.forEach(function (lyr) {
+    this.getLayers().forEach(function (lyr) {
       if (name === lyr.get('name')) {
         out = lyr;
       }
     })
     return out;
-  }
+  };
 
-  map.prototype.getFeatures = function (layer) {
-    return this.getLayer(layer).getSource().getFeatures(extent);
-  }
+  map.prototype.getFeatures = function getFeatures (layer) {
+    return this.getLayer(layer).getSource().getFeatures();
+  };
 
-  map.prototype.getFeature = function (layer, reference) {
+  map.prototype.getFeature = function getFeature (layer, reference) {
     return this.getLayer(layer).getSource().getClosestFeatureToCoordinate(reference);
-  }
+  };
 
-  map.prototype.layer = function (data) {
-    // Inject the global styles...
-    data.defaultStyle = this.defaults.styles.pointStyle;
+  map.prototype.layer = function layer (data) {
     var out = _layer.draw(data);
-    this.layers.push(out);
     this.ol.addLayer(out);
     return out;
-  }
+  };
 
-  map.prototype.animate = function (data, interval) {
+  map.prototype.animate = function animate (data, interval) {
     var set = [];
     data.getLayers().forEach(function (layer) {
       set.push(layer);
@@ -745,9 +858,9 @@ if(! window.ol) {
       }
       set[iterant].setVisible(!set[iterant].getVisible());
     }, interval);
-  }
+  };
 
-  map.prototype.panto = function (data) {
+  map.prototype.panto = function panto (data) {
     if (data.extents) {
       var extent = _extents(data.extents);
       this.ol.getView().fit(extent, {duration: this.duration});
@@ -759,6 +872,22 @@ if(! window.ol) {
         zoom: data.zoom
       });
     }
+  };
+
+  map.prototype.normalize = function normalize (data) {
+    return openlayers.proj.transform(data.coordinates, data.from, data.to);
+  };
+
+  function load (cb) {
+    if (document.readyState === 'complete') {
+      return setTimeout(cb, 0)
+    }
+
+    if (document.readyState === 'interactive') {
+      return setTimeout(function () { return load(cb); }, 150)
+    }
+
+    document.addEventListener('DOMContentLoaded', cb)
   }
 
   function plugin (Vue, options) {
@@ -774,18 +903,10 @@ if(! window.ol) {
     });
     Vue.component('v-map', OLMap);
 
-    Vue.map = new map();
+    Vue.map = new _map();
 
     Vue.prototype.$cmi = {
-      load: function load (cb) {
-        if (document.readyState === 'complete') {
-          return setTimeout(cb, 0);
-        }
-        if (document.readyState === 'interactive') {
-          return setTimeout(function () { load(cb); }, 150) ;
-        }
-        document.addEventListener('DOMContentLoaded', cb);
-      },
+      load: load(),
       map: function (target, data) {
         return Vue.map.draw(target, data);
       },
@@ -812,6 +933,11 @@ if(! window.ol) {
         },
         panto: function (data) {
           return Vue.map.panto(data);
+        }
+      },
+      functions: {
+        normalize: function (data) {
+          return Vue.map.normalize(data);
         }
       }
     }

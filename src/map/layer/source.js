@@ -13,15 +13,15 @@ export default _source = {
    * @private
    */
   __feature: (data, style, state) => {
-    var source = {}
-    source.geometry = data
+    let feature = new openlayers.Feature()
+    feature.setGeometry(data)
     if (style) {
-      source.style = style
+      feature.setStyle(style)
     }
     if (state) {
-      source.state = state
+      feature.set('state', state)
     }
-    return new openlayers.Feature(source)
+    return feature
   },
   /**
    * __attributions
@@ -60,6 +60,23 @@ export default _source = {
     return openlayers.proj.transform(coordinates, 'EPSG:4326', 'EPSG:3857')
   },
   /**
+   * __stylize
+   * Test if this feature has a unique style and apply that style
+   *
+   * @param data
+   * @returns {ol.Style}
+   * @private
+   */
+  __stylize: (data) => {
+    let styl
+    if (data.method) {
+      styl = data.method
+    } else {
+      styl = _style(data)
+    }
+    return styl
+  },
+  /**
    * _point
    * Utility method for creating a single point feature.
    * Points are unique in that each point can have a
@@ -75,20 +92,13 @@ export default _source = {
       coords = data
     } else {
       coords = data.coordinates
-      if(data.state) {
+      if (data.state) {
         state = data.state
       }
     }
     if (typeof data.style !== 'undefined') {
-      if (data.style.method) {
-        let styleFunc = data.style.method
-        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styleFunc, 'inactive')
-      } else {
-        styl = data.style
-        styl.type = 'Point'
-        styl = _style(styl)
-        feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
-      }
+      styl = _source.__stylize(data.style)
+      feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
     } else {
       feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), null, state)
     }
@@ -102,11 +112,18 @@ export default _source = {
    * @returns {ol.Feature}
    */
   _shape: (data) => {
+    let styl, feature
     let vertices = []
     for (let d = 0; d < data.coordinates.length; d++) {
-      vertices.push(_source._normalize(data.coordinates[d]))
+      vertices.push(_source.__normalize(data.coordinates[d]))
     }
-    return _source._feature(new openlayers.geom.Polygon([vertices]))
+    if (typeof data.style !== 'undefined') {
+      styl = _source.__stylize(data.style)
+      feature = _source.__feature(new openlayers.geom.Polygon([vertices]), styl)
+    } else {
+      feature = _source.__feature(new openlayers.geom.Polygon([vertices]))
+    }
+    return feature
   },
   /**
    * _xyz
@@ -159,12 +176,13 @@ export default _source = {
   },
   /**
    * _radius
-   * Create one circle feature
+   * Create one radius feature
    *
    * @param data Object
    * @returns {ol.Feature}
    */
   _radius: (data) => {
+    let styl, feature
     let radiusMiles = data.radius
     let arrConversion = []
     arrConversion['degrees'] = (1 / (60 * 1.1508))
@@ -178,8 +196,38 @@ export default _source = {
     // were passing in RADIUS and that's a diagonal when drawing the square.  so we have to
     // adjust by root 2 so we get the actual sides in length that we want
     let r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
-    let c = _source._normalize(data.coordinates)
-    return _source._feature(new openlayers.geom.Circle(c, r))
+    let c = _source.__normalize(data.coordinates)
+    if(typeof data.style !== 'undefined') {
+      styl = _source.__stylize(data.style)
+      feature = _source.__feature(new openlayers.geom.Circle(c, r), styl)
+    } else {
+      feature = _source.__feature(new openlayers.geom.Circle(c, r))
+    }
+    return feature
+  },
+  /**
+   * _circle
+   * Create a circle from a radius
+   *
+   * @param data Object
+   * @returns {ol.Feature}
+   */
+  _circle: (data) => {
+    let sides, angle
+    let radius = _source._radius(data).getGeometry()
+    if (data.sides) {
+      sides = data.sides
+    } else {
+      sides = 32
+    }
+    if(data.angle) {
+      angle = data.angle
+    } else {
+      angle = 0
+    }
+    let circle = openlayers.geom.Polygon.fromCircle(radius, sides, angle)
+    let feature = _source.__feature(circle)
+    return feature
   },
   /**
    * default
@@ -219,7 +267,9 @@ export default _source = {
    */
   point: (data) => {
     let features = [_source._point(data)]
-    return new openlayers.source.Vector(features)
+    let source = new openlayers.source.Vector()
+    source.addFeatures(features)
+    return source
   },
   /**
    * shape
@@ -230,17 +280,29 @@ export default _source = {
    */
   shape: (data) => {
     let features = [_source._shape(data)]
-    return new openlayers.source.Vector(features)
+    let source = new openlayers.source.Vector()
+    source.addFeatures(features)
+    return source
   },
   /**
    * radius
-   * Create one vector source with one circle shape feature
+   * Create one vector source with one radius shape feature
    *
    * @param data Object
    * @return {ol.source.Vector}
    */
   radius: (data) => {
     let features = [_source._radius(data)]
+    let source = new openlayers.source.Vector()
+    source.addFeatures(features)
+    return source
+  },
+  /**
+   * circle
+   * Create one vector source with one circle shape feature
+   */
+  circle: (data) => {
+    let features = [_source._circle(data)]
     return new openlayers.source.Vector(features)
   },
   /**
@@ -251,14 +313,12 @@ export default _source = {
    * @return {ol.source.Vector}
    */
   multi: (data) => {
-    let out = {}
-    let features = []
+    let source = new openlayers.source.Vector()
     for (var d = 0; d < data.length; d++) {
-      let met = _source['_' + data[d].type]
-      features.push(met(data[d]))
+      let method = _source['_' + data[d].type]
+      source.addFeature(method(data[d]))
     }
-    out.features = features
-    return new openlayers.source.Vector(out)
+    return source
   },
   /**
    * geojson
@@ -281,5 +341,30 @@ export default _source = {
       })
     }
     return out
+  },
+  /**
+   * compound
+   * Create a compound shape based on a series of coordinates
+   *
+   * @param data Array
+   * @return {ol.source.Vector}
+   */
+  compound: (data) => {
+    let coords = []
+    let source = new openlayers.source.Vector()
+    for (let d in data) {
+      // Extract the geometry from the shape...
+      let method = _source['_' + data[d].type]
+      let shape = method(data[d])
+      let geom = shape.getGeometry().getCoordinates()[0].slice()
+      if(geom.length % 2 === 0) {
+        let newGeom = geom.slice()
+        geom.push(newGeom[0])
+      }
+      coords.push(geom)
+    }
+    let feature = _source.__feature(new openlayers.geom.Polygon(coords))
+    source.addFeature(feature)
+    return source
   }
 }
