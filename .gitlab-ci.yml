@@ -22,5 +22,5 @@ deploy:local:
     only:
         - tags
     script:
-        - test "$CI_BUILD_TAG" -ne $(node -e 'console.log(JSON.parse(fs.readFileSync("./package.json", "utf8"))["version"]);')
+        - test "$CI_BUILD_TAG" == "$(node -e 'console.log(JSON.parse(fs.readFileSync("./package.json", "utf8"))["version"]);')"
         - make publish
