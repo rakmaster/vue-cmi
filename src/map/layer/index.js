@@ -155,6 +155,16 @@ export default _layer = {
     return layer
   },
   /**
+   * wms
+   */
+  wms (name, source) {
+    let src = _source.wms(source)
+    var layer = new openlayers.layer.Tile()
+    layer.set('name', name)
+    layer.setSource(src)
+    return layer
+  },
+  /**
    * compound
    * Draw a compound shape from two or more polygon shapes
    *

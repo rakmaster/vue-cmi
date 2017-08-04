@@ -343,6 +343,21 @@ export default _source = {
     return out
   },
   /**
+   *
+   */
+  wms: (data) => {
+    let out
+    out = new openlayers.source.TileWMS({
+      url: data.url,
+      params: {
+        LAYERS: data.coordinates,
+        TILED: true
+      },
+      serverType: 'geoserver'
+    })
+    return out
+  },
+  /**
    * compound
    * Create a compound shape based on a series of coordinates
    *
