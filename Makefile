@@ -46,9 +46,10 @@ test: node_modules  ## Run tests
 publish: dist  ## Publish to local NPM registry
 	@if [ -z ${NPM_LOCAL_USER} ]; then echo "Please set the NPM_LOCAL_USER environment variable before attempting to publish."; exit 1; fi
 	@if [ -z ${NPM_LOCAL_PASSWORD} ]; then echo "Please set the NPM_LOCAL_PASSWORD environment variable before attempting to publish."; exit 1; fi
+	@if [ -z ${NPM_LOCAL_EMAIL} ]; then echo "Please set the NPM_LOCAL_EMAIL environment variable before attempting to publish."; exit 1; fi
 	@if [ -z ${NPM_LOCAL_REGISTRY} ]; then echo "Please set the NPM_LOCAL_REGISTRY environment variable before attempting to publish."; exit 1; fi
-	echo -e "$NPM_LOCAL_USER\n$NPM_LOCAL_PASSWORD\n$NPM_LOCAL_EMAIL" | npm login --registry "$NPM_LOCAL_REGISTRY"
-	npm publish --registry "$NPM_LOCAL_REGISTRY"
+	echo -e "${NPM_LOCAL_USER}\n${NPM_LOCAL_PASSWORD}\n${NPM_LOCAL_EMAIL}" | npm login --registry "${NPM_LOCAL_REGISTRY}"
+	npm publish --registry "${NPM_LOCAL_REGISTRY}"
 .PHONY: link
 
 package: dist  ## Create package for deployment
