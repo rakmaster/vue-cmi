@@ -1,0 +1,26 @@
+image: build1.dev.nids.noaa.gov:5000/build/php56-rhel7
+
+stages:
+    - build
+    - deploy
+
+build:
+    stage: build
+    only:
+        - /^bugfix\//
+        - /^feature\//
+        - master
+    script:
+        - make test
+        - VERSION="${VERSION:-$(date +%Y%m%d)}" make package
+    artifacts:
+        paths:
+            - dist/*.tar.gz
+
+deploy:local:
+    stage: deploy
+    only:
+        - tags
+    script:
+        - test "$CI_BUILD_TAG" == "$(node -e 'console.log(JSON.parse(fs.readFileSync("./package.json", "utf8"))["version"]);')"
+        - make publish
