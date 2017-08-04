@@ -1,20 +1,21 @@
 image: build1.dev.nids.noaa.gov:5000/build/php56-rhel7
 
 stages:
-    - test
+    - build
     - deploy
 
-test:
-    stage: test
+build:
+    stage: build
     only:
         - /^bugfix\//
         - /^feature\//
-        - /^hotfix\//
         - master
     script:
-        - npm install
-        - npm run build --report
-        - npm test
+        - make test
+        - VERSION="${VERSION:-$(date +%Y%m%d)}" make package
+    artifacts:
+        paths:
+            - dist/*.tar.gz
 
 deploy:local:
     stage: deploy
@@ -22,7 +23,4 @@ deploy:local:
         - tags
     script:
         - test "$CI_BUILD_TAG" -ne $(node -e 'console.log(JSON.parse(fs.readFileSync("./package.json", "utf8"))["version"]);')
-        - npm install
-        - npm run build
-        - echo -e "$NPM_LOCAL_USER\n$NPM_LOCAL_PASSWORD\n$NPM_LOCAL_EMAIL" | npm login --registry "$NPM_LOCAL_REGISTRY"
-        - npm publish --registry "$NPM_LOCAL_REGISTRY"
+        - make publish
