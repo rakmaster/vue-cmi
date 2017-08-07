@@ -24,10 +24,7 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        exclude: /node_modules/,
-        query: {
-          objectAssign: 'Object.assign'
-        }
+        exclude: /node_modules/
       }
     ]
   },
