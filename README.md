@@ -18,7 +18,7 @@ The VERSION environment variable must be defined for this operation.
 
 Run `make publish`.  The following environment variables must be defined for this command:
 
-* NPM_LOCAL_USER
-* NPM_LOCAL_PASSWORD
-* NPM_LOCAL_EMAIL
-* NPM_LOCAL_REGISTRY
+* NPM_LOCAL_REGISTRY: the URL for the internal registry
+* NPM_LOCAL_TOKEN: the npm authentication token (use [npm adduser] to generate a new token if needed and check ~/.npmrc)
+
+[npm adduser]: https://docs.npmjs.com/cli/adduser

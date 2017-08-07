@@ -43,12 +43,12 @@ test: node_modules  ## Run tests
 	npm run test
 .PHONY: test
 
-publish: dist  ## Publish to local NPM registry
-	@if [ -z ${NPM_LOCAL_USER} ]; then echo "Please set the NPM_LOCAL_USER environment variable before attempting to publish."; exit 1; fi
-	@if [ -z ${NPM_LOCAL_PASSWORD} ]; then echo "Please set the NPM_LOCAL_PASSWORD environment variable before attempting to publish."; exit 1; fi
-	@if [ -z ${NPM_LOCAL_EMAIL} ]; then echo "Please set the NPM_LOCAL_EMAIL environment variable before attempting to publish."; exit 1; fi
+.npmrc:  # Generate .npmrc file
 	@if [ -z ${NPM_LOCAL_REGISTRY} ]; then echo "Please set the NPM_LOCAL_REGISTRY environment variable before attempting to publish."; exit 1; fi
-	echo -e "${NPM_LOCAL_USER}\n${NPM_LOCAL_PASSWORD}\n${NPM_LOCAL_EMAIL}" | npm login --registry "${NPM_LOCAL_REGISTRY}"
+	echo "//$(shell echo "$${NPM_LOCAL_REGISTRY}" | sed -r 's/[0-9A-Za-z]*:?\/\/(.*)/\1/'):_authToken=\$${NPM_LOCAL_TOKEN}" >> .npmrc
+
+publish: dist .npmrc  ## Publish to local NPM registry
+	@if [ -z ${NPM_LOCAL_REGISTRY} ]; then echo "Please set the NPM_LOCAL_REGISTRY environment variable before attempting to publish."; exit 1; fi
 	npm publish --registry "${NPM_LOCAL_REGISTRY}"
 .PHONY: link
 
