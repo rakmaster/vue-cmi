@@ -1,0 +1,14 @@
+.DS_Store
+.idea/
+/.babelrc
+/.editorconfig
+/.eslint*
+/.gitattributes
+/.gitignore
+/.gitlab-ci.yml
+/.npmignore
+/.postcssrc.js
+/Makefile
+/README.md
+/node_modules/
+/npm-debug.log
