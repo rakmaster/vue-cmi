@@ -1,4 +1,4 @@
-image: build1.dev.nids.noaa.gov:5000/build/php56-rhel7
+image: build1.dev.nids.noaa.gov:5000/build/nodejs-rhel7
 
 stages:
     - build
@@ -26,3 +26,6 @@ deploy:local:
         - make publish
         - VERSION="${CI_BUILD_TAG}" make package
         - scp dist/*.tar.gz ${CDN_UPLOAD_HOST}:${CDN_UPLOAD_PATH}
+    artifacts:
+        paths:
+            - dist/*.tar.gz
