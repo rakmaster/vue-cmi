@@ -54,5 +54,5 @@ publish: dist .npmrc  ## Publish to local NPM registry
 .PHONY: link
 
 package: dist  ## Create package for deployment
-	tar czvf dist/noaa-cmi-${VERSION}.tar.gz --transform 's/^dist\//noaa-cmi\/${VERSION}\/js\//' --exclude '*.tar.gz' dist/*.js
+	tar czvf dist/noaa-cmi-${VERSION}.tar.gz --transform 's|^dist/|noaa-cmi/${VERSION}/js/|' --exclude '*.tar.gz' dist/*.js
 .PHONY: package
