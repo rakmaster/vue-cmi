@@ -25,7 +25,7 @@ deploy:local:
         - test "${CI_BUILD_TAG}" == "$(node -e 'console.log(JSON.parse(fs.readFileSync("./package.json", "utf8"))["version"]);')"
         - make publish
         - make package
-        - scp dist/*.tar.gz ${CDN_DEV_UPLOAD_HOST}:${CDN_DEV_UPLOAD_PATH}
+        - scp dist/*.tar.gz ${CDN_DEV_UPLOAD_LOGIN}:${CDN_DEV_UPLOAD_PATH}
     artifacts:
         paths:
             - dist/*.tar.gz
