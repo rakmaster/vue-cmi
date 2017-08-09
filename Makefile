@@ -1,4 +1,5 @@
-
+CMD := node -e "console.log(JSON.parse(fs.readFileSync('./package.json', 'utf8'))['version']);"
+VERSION := $(shell $(CMD))
 
 help: ## Show this help message
 	@IFS=$$'\n' ; \
@@ -53,6 +54,5 @@ publish: dist .npmrc  ## Publish to local NPM registry
 .PHONY: link
 
 package: dist  ## Create package for deployment
-	@if [ -z ${VERSION} ]; then echo "Please set the VERSION environment variable before building a package."; exit 1; fi
-	tar czvf dist/noaa-cmi-${VERSION}.tar.gz --transform 's/^dist\//noaa-cmi\/${VERSION}\/js\//' dist/*.js
+	tar czvf dist/noaa-cmi-${VERSION}.tar.gz --transform 's/^dist\//noaa-cmi\/${VERSION}\/js\//' --exclude '*.tar.gz' dist/*.js
 .PHONY: package

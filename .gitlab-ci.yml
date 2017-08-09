@@ -12,7 +12,7 @@ build:
         - master
     script:
         - make test
-        - VERSION="${VERSION:-$(date +%Y%m%d)}" make package
+        - make package
     artifacts:
         paths:
             - dist/*.tar.gz
@@ -24,8 +24,8 @@ deploy:local:
     script:
         - test "${CI_BUILD_TAG}" == "$(node -e 'console.log(JSON.parse(fs.readFileSync("./package.json", "utf8"))["version"]);')"
         - make publish
-        - VERSION="${CI_BUILD_TAG}" make package
-        - scp dist/*.tar.gz ${CDN_UPLOAD_HOST}:${CDN_UPLOAD_PATH}
+        - make package
+        - scp dist/*.tar.gz ${CDN_DEV_UPLOAD_HOST}:${CDN_DEV_UPLOAD_PATH}
     artifacts:
         paths:
             - dist/*.tar.gz
