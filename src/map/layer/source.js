@@ -347,12 +347,16 @@ export default _source = {
    */
   wms: (data) => {
     let out
+    let params = {
+      LAYERS: data.coordinates,
+      TILED: true
+    }
+    if (data.time) {
+      params.TIME = data.time
+    }
     out = new openlayers.source.TileWMS({
       url: data.url,
-      params: {
-        LAYERS: data.coordinates,
-        TILED: true
-      },
+      params: params,
       serverType: 'geoserver'
     })
     return out

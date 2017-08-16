@@ -79,6 +79,26 @@ export default _layer = {
     return layer
   },
   /**
+   * point
+   * Draw a layer of the type Vector with one Point feature
+   * Note: the point layer may have a custom style assignment. If the point data
+   * does not contain its own style designation it will use the global instead
+   *
+   * @param name
+   * @param source
+   * @returns {ol.layer.Vector|ol.source.Vector|ol.test.rendering.layer.Vector}
+   */
+  point (name, source) {
+    let src = _source.point(source)
+    let layer = _layer._vector(name, src)
+    if (source.style) {
+      layer.setStyle(_style(source.style))
+    } else {
+      layer.setStyle(_style({type: 'Point'}))
+    }
+    return layer
+  },
+  /**
    * shape
    * Draw a layer of the type Vector with one Shape feature
    * Note: the shape layer may have a custom style assignment. If the shape data
