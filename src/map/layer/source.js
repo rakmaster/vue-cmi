@@ -256,7 +256,15 @@ export default _source = {
    * @returns {ol.source.ImageStatic}
    */
   image: (data) => {
-    return new openlayers.source.ImageStatic(_source._image(data))
+    if(data.type && data.type === 'arcgis') {
+      return new openlayers.source.ImageArcGISRest({
+         ratio: 1,
+         params: {},
+         url: data.url
+      })
+    } else {
+      return new openlayers.source.ImageStatic(_source._image(data))
+    }
   },
   /**
    * point
