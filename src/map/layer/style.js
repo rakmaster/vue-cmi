@@ -3,10 +3,21 @@ import { defaults } from '../defaults'
 
 
 let _stroke = (stroke) => {
-  return new openlayers.style.Stroke({
-    color: stroke.color,
-    width: stroke.width
-  })
+  let params = {}
+  if (stroke.color) {
+    params.color = stroke.color
+  } else {
+    params.color = defaults.styles.stroke.color
+  }
+  if (stroke.width) {
+    params.width = stroke.width
+  } else {
+    params.width = defaults.styles.stroke.width
+  }
+  if (stroke.lineDash) {
+    params.lineDash = stroke.lineDash
+  }
+  return new openlayers.style.Stroke(params)
 }
 
 let _fill = (fill) => {
