@@ -12,7 +12,7 @@ export default _source = {
    * @returns {ol.Feature}
    * @private
    */
-  __feature: (data, style, state) => {
+  __feature: (data, style, state, meta) => {
     let feature = new openlayers.Feature()
     feature.setGeometry(data)
     if (style) {
@@ -20,6 +20,9 @@ export default _source = {
     }
     if (state) {
       feature.set('state', state)
+    }
+    if (meta) {
+      feature.set('meta', meta)
     }
     return feature
   },
@@ -87,7 +90,7 @@ export default _source = {
    * @private
    */
   _point: (data) => {
-    let coords, styl, feature, state
+    let feature, coords, styl, state, meta
     if (Array.isArray(data)) {
       coords = data
     } else {
@@ -95,13 +98,14 @@ export default _source = {
       if (data.state) {
         state = data.state
       }
+      if (data.meta) {
+        meta = data.meta
+      }
     }
     if (typeof data.style !== 'undefined') {
       styl = _source.__stylize(data.style)
-      feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state)
-    } else {
-      feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), null, state)
     }
+    feature = _source.__feature(new openlayers.geom.Point(_source.__normalize(coords)), styl, state, meta)
     return feature
   },
   /**
@@ -112,17 +116,21 @@ export default _source = {
    * @returns {ol.Feature}
    */
   _shape: (data) => {
-    let styl, feature
+    let feature, styl, state, meta
     let vertices = []
     for (let d = 0; d < data.coordinates.length; d++) {
       vertices.push(_source.__normalize(data.coordinates[d]))
     }
+    if (data.state) {
+      state = data.state
+    }
+    if (data.meta) {
+      meta = data.meta
+    }
     if (typeof data.style !== 'undefined') {
       styl = _source.__stylize(data.style)
-      feature = _source.__feature(new openlayers.geom.Polygon([vertices]), styl)
-    } else {
-      feature = _source.__feature(new openlayers.geom.Polygon([vertices]))
     }
+    feature = _source.__feature(new openlayers.geom.Polygon([vertices]), styl, state, meta)
     return feature
   },
   /**
@@ -182,7 +190,7 @@ export default _source = {
    * @returns {ol.Feature}
    */
   _radius: (data) => {
-    let styl, feature
+    let feature, styl, state, meta
     let radiusMiles = data.radius
     let arrConversion = []
     arrConversion['degrees'] = (1 / (60 * 1.1508))
@@ -197,12 +205,16 @@ export default _source = {
     // adjust by root 2 so we get the actual sides in length that we want
     let r = radiusMiles * arrConversion[data.units] * (1.41421356 / 2)
     let c = _source.__normalize(data.coordinates)
+    if (data.state) {
+      state = data.state
+    }
+    if (data.meta) {
+      meta = data.meta
+    }
     if(typeof data.style !== 'undefined') {
       styl = _source.__stylize(data.style)
-      feature = _source.__feature(new openlayers.geom.Circle(c, r), styl)
-    } else {
-      feature = _source.__feature(new openlayers.geom.Circle(c, r))
     }
+    feature = _source.__feature(new openlayers.geom.Circle(c, r), styl, state, meta)
     return feature
   },
   /**
@@ -213,7 +225,7 @@ export default _source = {
    * @returns {ol.Feature}
    */
   _circle: (data) => {
-    let sides, angle
+    let sides, angle, styl, state, meta
     let radius = _source._radius(data).getGeometry()
     if (data.sides) {
       sides = data.sides
@@ -225,8 +237,17 @@ export default _source = {
     } else {
       angle = 0
     }
+    if (data.state) {
+      state = data.state
+    }
+    if (data.meta) {
+      meta = data.meta
+    }
+    if (typeof data.style !== 'undefined') {
+      styl = _source.__stylize(data.style)
+    }
     let circle = openlayers.geom.Polygon.fromCircle(radius, sides, angle)
-    let feature = _source.__feature(circle)
+    let feature = _source.__feature(circle, styl, state, meta)
     return feature
   },
   /**
