@@ -1,4 +1,5 @@
 import _layer from './layer'
+import _style from './layer/style'
 import { defaults } from './defaults'
 
 const openlayers = require('../../node_modules/openlayers/dist/ol-debug.js')
@@ -147,8 +148,7 @@ class map {
 
   panto (data) {
     if (data.extents) {
-      let extent = _extents(data.extents)
-      this.ol.getView().fit(extent, {duration: this.duration})
+      this.ol.getView().fit(data.extents, {duration: this.duration})
     }
     if (data.zoom) {
       this.ol.getView().animate({
@@ -159,8 +159,16 @@ class map {
     }
   }
 
+  style (data) {
+    return _style(data)
+  }
+
   normalize (data) {
-    return openlayers.proj.transform(data.coordinates, data.from, data.to)
+    if (data.coordinates.length > 2) {
+      return openlayers.proj.transformExtent(out, openlayers.proj.get(data.from), openlayers.proj.get(data.to))
+    } else {
+      return openlayers.proj.transform(data.coordinates, data.from, data.to)
+    }
   }
 }
 

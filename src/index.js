@@ -49,6 +49,9 @@ function plugin (Vue, options) {
     functions: {
       normalize: (data) => {
         return Vue.map.normalize(data)
+      },
+      style: (data) => {
+        return Vue.map.style(data)
       }
     }
   }
