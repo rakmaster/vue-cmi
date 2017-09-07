@@ -148,7 +148,11 @@ class map {
 
   panto (data) {
     if (data.extents) {
-      this.ol.getView().fit(data.extents, {duration: this.duration})
+      let params
+      if (data.params) {
+        params = data.params
+      }
+      this.ol.getView().fit(data.extents, params)
     }
     if (data.zoom) {
       this.ol.getView().animate({
