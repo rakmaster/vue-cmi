@@ -122,9 +122,7 @@ class map {
   }
 
   layer (data) {
-    let out = _layer.draw(data)
-    this.ol.addLayer(out)
-    return out
+    return _layer.draw(data)
   }
 
   animate (data, interval) {
