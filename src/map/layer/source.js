@@ -377,8 +377,10 @@ export default _source = {
   wms: (data) => {
     let out
     let params = {
-      LAYERS: data.coordinates,
       TILED: true
+    }
+    if (data.coordinates) {
+      params.LAYERS = data.coordinates
     }
     if (data.time) {
       params.TIME = data.time

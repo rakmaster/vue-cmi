@@ -55,8 +55,7 @@ let _arrange = (data) => {
 }
 
 let _style = (data) => {
-  let out
-  let stl = _arrange(data)
+  let out, stl
   let source = {}
   let methods = {
     Point: (styl) => {
@@ -126,7 +125,16 @@ let _style = (data) => {
       return new openlayers.style.Style(source)
     }
   }
-  out = methods[data.type](stl)
+  if (Array.isArray(data)) {
+    out = []
+    for (var d in data) {
+      stl = _arrange(data[d])
+      out.push(methods[data[d].type](stl))
+    }
+  } else {
+    stl = _arrange(data)
+    out = methods[data.type](stl)
+  }
   return out
 }
 
