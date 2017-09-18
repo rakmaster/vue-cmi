@@ -385,6 +385,9 @@ export default _source = {
     if (data.time) {
       params.TIME = data.time
     }
+    if (data.style) {
+      params.STYLE = data.style
+    }
     out = new openlayers.source.TileWMS({
       url: data.url,
       params: params,
