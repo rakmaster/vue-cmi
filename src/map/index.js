@@ -167,7 +167,7 @@ class map {
 
   normalize (data) {
     if (data.coordinates.length > 2) {
-      return openlayers.proj.transformExtent(out, openlayers.proj.get(data.from), openlayers.proj.get(data.to))
+      return openlayers.proj.transformExtent(data.coordinates, openlayers.proj.get(data.from), openlayers.proj.get(data.to))
     } else {
       return openlayers.proj.transform(data.coordinates, data.from, data.to)
     }
