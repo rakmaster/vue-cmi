@@ -160,7 +160,7 @@ export default _layer = {
    * geojson
    * Draw a layer based on a GeoJSON string
    *
-   * @apram name String
+   * @param name String
    * @param source Object
    * @returns {ol.layer.Vector}
    */
@@ -176,6 +176,11 @@ export default _layer = {
   },
   /**
    * wms
+   * Draw a layer based on a call to a WMS
+   *
+   * @param name String
+   * @param source Object
+   * @returns {ol.layer.Tile}
    */
   wms (name, source) {
     let src = _source.wms(source)

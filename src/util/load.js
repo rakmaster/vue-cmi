@@ -1,3 +1,9 @@
+/**
+ * load
+ * wait for the DOM to load and become interactive
+ *
+ * @param cb
+ */
 function load (cb) {
   if (document.readyState === 'complete') {
     return setTimeout(cb, 0)

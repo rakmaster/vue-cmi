@@ -372,7 +372,11 @@ export default _source = {
     return out
   },
   /**
+   * wms
+   * Create one layer source using a call to a WMS
    *
+   * @param data Object
+   * @return {ol.source.Tile}
    */
   wms: (data) => {
     let out

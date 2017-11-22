@@ -1,7 +1,14 @@
 const openlayers = require('../../../node_modules/openlayers/dist/ol-debug.js')
 import { defaults } from '../defaults'
 
-
+/**
+ * _stroke
+ * A helper function for creating an ol.Stroke object
+ *
+ * @param stroke
+ * @returns {ol.style.Stroke}
+ * @private
+ */
 let _stroke = (stroke) => {
   let params = {}
   if (stroke.color) {
@@ -25,7 +32,15 @@ let _fill = (fill) => {
     color: fill.color
   })
 }
-
+/**
+ * _text
+ * A helper function for creating an ol.Text
+ *
+ * @param text
+ * @param fill
+ * @returns {ol.style.Text}
+ * @private
+ */
 let _text = (text, fill) => {
   return new openlayers.style.Text({
     text: text.character,
@@ -34,7 +49,15 @@ let _text = (text, fill) => {
     fill: _fill(fill)
   })
 }
-
+/**
+ * _arrange
+ * A helper function for assigning defaults to any style and
+ * over-riding those defaults with data sent by the application
+ *
+ * @param data
+ * @returns {{}}
+ * @private
+ */
 let _arrange = (data) => {
   var out = {}
   for(var v in defaults.styles) {
@@ -53,7 +76,17 @@ let _arrange = (data) => {
   }
   return out
 }
-
+/**
+ * _style
+ * The main method for creating openlayers style objects
+ * Each method corresponds with an opelayers style type designation.
+ * You can either request a single style, or send an array to retrieve a
+ * collection of styles.
+ *
+ * @param data
+ * @returns {*}
+ * @private
+ */
 let _style = (data) => {
   let out, stl
   let source = {}
