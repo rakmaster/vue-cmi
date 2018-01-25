@@ -10,7 +10,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../dist'),
     publicPath: '/dist/',
-    library: 'noaa-cmi'
+    library: 'vue-cmi'
   },
   node: {
     fs: 'empty'

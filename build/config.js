@@ -4,11 +4,11 @@ const merge = require('webpack-merge')
 
 const builds = {
   'dev' : {
-    filename: 'noaa-cmi.js',
+    filename: 'vue-cmi.js',
     libraryTarget: 'umd',
   },
   'prod' : {
-    filename: 'noaa-cmi.min.js',
+    filename: 'vue-cmi.min.js',
     libraryTarget: 'umd',
     env: 'production'
   }
