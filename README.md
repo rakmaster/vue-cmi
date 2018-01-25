@@ -1,6 +1,6 @@
-# noaa-cmi
+# vue-cmi
 
-Core code for NWS CMI interface.
+Openlayers for vue.js
 
 ## Setup
 
