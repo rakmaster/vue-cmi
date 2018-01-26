@@ -1,14 +1,14 @@
 {
   "name": "vue-cmi",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "author": {
     "name": "William Logan",
     "email": "logan@theinitiativepg.com",
     "url": "http://theinitiativepg.com"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/rakmaster/vue-cmi"
+    "type": "git",
+    "url": "https://github.com/rakmaster/vue-cmi"
   },
   "license": "GPL-3.0",
   "homepage": "http://www.burningphantom.com/vue-cmi.html",
