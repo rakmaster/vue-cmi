@@ -10,9 +10,9 @@ npm install vue-cli
 
 After install add this to your main.js:
 
-import VueCli from 'vue-cli'
+import VueCmi from 'vue-cmi'
 
-Vue.use(VueCli)
+Vue.use(VueCmi)
 
 ## Usage
 
