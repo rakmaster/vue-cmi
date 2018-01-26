@@ -20,7 +20,7 @@ Vue CLI is a plugin for Vue.js that allows you to have easy access to all Openla
 
 ```
 import Vue from 'vue'
-import CMI from 'noaa-cmi'
+import CMI from 'vue-cmi'
 import App from './App'
 
 import '../node_modules/openlayers/dist/ol.css'
