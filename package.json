@@ -6,6 +6,10 @@
     "email": "logan@theinitiativepg.com",
     "url": "http://theinitiativepg.com"
   },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/rakmaster/vue-cmi"
+  },
   "license": "GPL-3.0",
   "homepage": "http://www.burningphantom.com/vue-cmi.html",
   "main": "dist/vue-cmi.js",

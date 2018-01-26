@@ -4,21 +4,61 @@ Openlayers for vue.js
 
 ## Setup
 
-For a production build, run `make build`.
+Run
 
-For development, run `make dev`.
+npm install vue-cli
 
-## Packaging
+After install add this to your main.js:
 
-Run `make package` to create a tar.gz archive of the distributable products.
+import VueCli from 'vue-cli'
 
-The VERSION environment variable must be defined for this operation.
+Vue.use(VueCli)
 
-## Publishing (internal registry only)
+## Usage
 
-Run `make publish`.  The following environment variables must be defined for this command:
+Vue CLI is a plugin for Vue.js that allows you to have easy access to all Openlayers map drawing methods in your Vue.js application. To use Vue CLI, simply "use" it, then call the plugin inside your component.
 
-* NPM_LOCAL_REGISTRY: the URL for the internal registry
-* NPM_LOCAL_TOKEN: the npm authentication token (use [npm adduser] to generate a new token if needed and check ~/.npmrc)
+```
+import Vue from 'vue'
+import CMI from 'noaa-cmi'
+import App from './App'
 
-[npm adduser]: https://docs.npmjs.com/cli/adduser
+import '../node_modules/openlayers/dist/ol.css'
+
+Vue.use(CMI)
+
+/* eslint-disable no-new */
+new Vue({
+  el: '#myapp',
+  store,
+  template: '<App/>',
+  components: { App }
+})
+```
+
+Drawing a map without options is simple:
+
+```
+<template>
+  <div id="app">
+    <v-map id="map" :mapdata="mapdata"></v-map>
+  </div>
+</template>
+
+<script>
+  var em = new Vue({
+    mounted () {
+      this.map = this.$cmi.map('map')
+    },
+    data () {
+      return {
+        map: {}
+      }
+    }
+  })
+</script>
+```
+
+## More Details
+
+For more details on how to use Vue CMI visit http://buriningphantom.com/vue-cmi
