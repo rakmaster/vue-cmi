@@ -12,7 +12,7 @@
   },
   "license": "GPL-3.0",
   "homepage": "http://www.burningphantom.com/vue-cmi.html",
-  "main": "dist/vue-cmi.js",
+  "main": "dist/vue-cmi.min.js",
   "description": "OpenLayers 4 for Vue.js",
   "scripts": {
     "build": "NODE_ENV=production node build/build.js",
